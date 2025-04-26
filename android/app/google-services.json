@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "562194977189",
+    "firebase_url": "https://pg-helper-default-rtdb.firebaseio.com",
+    "project_id": "pg-helper",
+    "storage_bucket": "pg-helper.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:562194977189:android:20ad5cbf593c21509b584c",
+        "android_client_info": {
+          "package_name": "com.example.pg_helper"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAEq0ZMR4uVW7_Bwx2jlhQyF7aihLvZwy8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

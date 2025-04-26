@@ -1,0 +1,13 @@
+login
+register
+
+
+Admin
+    can Confirm the user
+    can add meals
+    payment pending
+User
+    Profile
+    see daily meals
+    about us
+    contact us
