@@ -1,6 +1,4 @@
-
 class RegisterRetrieveModel {
-  String? key; // Firebase key
   String username;
   String password;
   String name;
@@ -9,9 +7,9 @@ class RegisterRetrieveModel {
   String DOB;
   String contact;
   String status;
+  String? key;
 
   RegisterRetrieveModel({
-    this.key,
     required this.username,
     required this.password,
     required this.name,
@@ -20,12 +18,11 @@ class RegisterRetrieveModel {
     required this.DOB,
     required this.contact,
     required this.status,
+    this.key,
   });
 
-  // Factory constructor to create an object from Firebase snapshot
   factory RegisterRetrieveModel.fromJson(Map<dynamic, dynamic> json, String key) {
     return RegisterRetrieveModel(
-      key: key,
       username: json['Username'] ?? '',
       password: json['Password'] ?? '',
       name: json['FirstName'] ?? '',
@@ -34,6 +31,7 @@ class RegisterRetrieveModel {
       DOB: json['DOB'] ?? '',
       contact: json['ContactNumber'] ?? '',
       status: json['Status'] ?? '',
+      key: key,
     );
   }
 }

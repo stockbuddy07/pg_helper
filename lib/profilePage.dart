@@ -13,7 +13,9 @@ import 'package:flutter/material.dart';
 import 'package:pg_helper/saveSharePreferences.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'EditProfile.dart';
 import 'UserChangePassword.dart';
+import 'ViewProfile.dart';
 import 'drawerSideNavigation.dart';
 import 'login.dart';
 
@@ -78,7 +80,7 @@ class _MyProfileState extends State<MyProfile> {
 
     Ref = FirebaseDatabase.instance
         .ref()
-        .child("ArogyaSair/tblUser")
+        .child("PG_helper/tblUser")
         .orderByChild("Username")
         .equalTo(username);
 
@@ -133,12 +135,12 @@ class _MyProfileState extends State<MyProfile> {
             padding: const EdgeInsetsDirectional.fromSTEB(0, 12, 0, 0),
             child: InkWell(
               onTap: () async {
-                // Navigator.push(
-                //   context,
-                //   MaterialPageRoute(
-                //     // builder: (context) => const ViewProfile(),
-                //   ),
-                // );
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ViewProfile(),
+                  ),
+                );
               },
               child: Padding(
                 padding: const EdgeInsetsDirectional.fromSTEB(16, 5, 0, 0),
@@ -173,12 +175,12 @@ class _MyProfileState extends State<MyProfile> {
                     ),
                     GestureDetector(
                       onTap: () {
-                        // Navigator.push(
-                        //   context,
-                        //   MaterialPageRoute(
-                        //     builder: (context) => const ViewProfile(),
-                        //   ),
-                        // );
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const ViewProfile(),
+                          ),
+                        );
                       },
                       child: const Padding(
                         padding: EdgeInsetsDirectional.fromSTEB(0, 0, 12, 0),
@@ -198,10 +200,10 @@ class _MyProfileState extends State<MyProfile> {
             padding: const EdgeInsetsDirectional.fromSTEB(0, 16, 0, 0),
             child: InkWell(
               onTap: () async {
-                // Navigator.push(
-                //     context,
-                //     MaterialPageRoute(
-                //         builder: (context) => const EditProfile()));
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const EditProfile()));
               },
               child: const Row(
                 children: [
