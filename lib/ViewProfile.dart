@@ -209,29 +209,29 @@ class _ViewProfileState extends State<ViewProfile> {
                               subtitle: Text(controllerLastName),
                             ),
                             const Divider(height: 20, color: Colors.grey),
-                            // ListTile(
-                            //   leading: const Icon(
-                            //     Icons.wc,
-                            //     color: Color(0xff12d3c6),
-                            //   ),
-                            //   title: const Text(
-                            //     'Gender',
-                            //     style: TextStyle(fontWeight: FontWeight.bold),
-                            //   ),
-                            //   subtitle: Text(selectedGender),
-                            // ),
+                            ListTile(
+                              leading: const Icon(
+                                Icons.wc,
+                                color: Color(0xff12d3c6),
+                              ),
+                              title: const Text(
+                                'Gender',
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              subtitle: Text(selectedGender),
+                            ),
                             const Divider(height: 20, color: Colors.grey),
-                            // ListTile(
-                            //   leading: const Icon(
-                            //     Icons.favorite,
-                            //     color: Color(0xff12d3c6),
-                            //   ),
-                            //   title: const Text(
-                            //     'Blood Group',
-                            //     style: TextStyle(fontWeight: FontWeight.bold),
-                            //   ),
-                            //   subtitle: Text(controllerBloodGroup),
-                            // ),
+                            ListTile(
+                              leading: const Icon(
+                                Icons.favorite,
+                                color: Color(0xff12d3c6),
+                              ),
+                              title: const Text(
+                                'Blood Group',
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              subtitle: Text(controllerBloodGroup),
+                            ),
                             const Divider(height: 20, color: Colors.grey),
                             ListTile(
                               leading: const Icon(

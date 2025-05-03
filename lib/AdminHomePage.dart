@@ -10,6 +10,7 @@ import 'package:pg_helper/pendingUserList.dart';
 import 'package:pg_helper/saveSharePreferences.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'AdminQuestionView.dart';
 import 'firebase_api.dart';
 
 class AdminHomePage extends StatefulWidget {
@@ -141,7 +142,7 @@ class _HospitalHomePage extends State<AdminHomePage> {
                 child: PendingUsersPage(),
               ),
               Center(
-                // child: HospitalAppointmentTab(hospitalKey),
+                child: AdminQuestionView(),
               ),
             ],
           ),

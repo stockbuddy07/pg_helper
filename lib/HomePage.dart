@@ -4,11 +4,9 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:pg_helper/saveSharePreferences.dart';
-import 'package:pg_helper/src/fillImageCard.dart';
 
 import 'drawerSideNavigation.dart';
 import 'firebase_api.dart';
-import 'getHomeData.dart';
 import 'models/MealsModel.dart';
 
 class HomePage extends StatefulWidget {

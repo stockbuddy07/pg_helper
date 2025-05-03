@@ -63,7 +63,7 @@ class _BottomBarState extends State<BottomBar> {
       ),
       const Scaffold(
         backgroundColor: Colors.white,
-        body: HelpDesk(),
+        body: MyHelpDesk(),
       ),
       Scaffold(
         backgroundColor: Colors.white,
@@ -93,7 +93,7 @@ class _BottomBarState extends State<BottomBar> {
           items: [
             _buildIcon(Icons.home, 0),
             _buildIcon(Icons.update, 1),
-            _buildIcon(Icons.history, 2),
+            _buildIcon(Icons.live_help_outlined, 2),
             _buildIcon(Icons.person, 3),
           ],
           index: _selectedIndex, // Use 'index' instead of 'currentIndex'
