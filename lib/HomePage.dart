@@ -153,6 +153,40 @@ class _HomePageState extends State<HomePage> {
                       ),
                       ),
                     ),
+// PG Rules & Regulations Section
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 25, vertical: 16),
+                      child: Text(
+                        "PG Rules & Regulations:",
+                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: Card(
+                        elevation: 6,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: const [
+                              Text("1. Maintain cleanliness in rooms and common areas."),
+                              SizedBox(height: 8),
+                              Text("2. No loud music or parties after 10 PM."),
+                              SizedBox(height: 8),
+                              Text("3. Outside guests are not allowed without permission."),
+                              SizedBox(height: 8),
+                              Text("4. Meal timings must be followed strictly."),
+                              SizedBox(height: 8),
+                              Text("5. Damages to property will be charged."),
+                              SizedBox(height: 8),
+                              Text("6. Maintain discipline and decorum."),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
 
                   ],
                 ),
@@ -257,6 +291,7 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
       ),
+
     );
   }
 }
