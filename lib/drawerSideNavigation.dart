@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:pg_helper/login.dart';
 import 'package:pg_helper/profilePage.dart';
+import 'package:pg_helper/queries.dart';
 import 'package:pg_helper/saveSharePreferences.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -138,9 +139,9 @@ class _DrawerCode extends State<DrawerCode> {
             ),
             title: const Text("About us"),
             onTap: () {
-              // Navigator.pop(context);
-              // Navigator.push(context,
-              //     MaterialPageRoute(builder: (context) => const AboutUs()));
+              Navigator.pop(context);
+              Navigator.push(context,
+                  MaterialPageRoute(builder: (context) => const UserQnAView()));
             },
           ),
           ListTile(

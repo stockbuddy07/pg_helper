@@ -5,15 +5,16 @@ class UserAskQuestionModel {
   late String? UserId;
   late String? dateTime;
   late String? Status;
-  // late String QuestionId;
+  late String? answer;
 
-  UserAskQuestionModel(this.Question, this.UserId, this.dateTime, this.Status);
+  UserAskQuestionModel(this.Question, this.UserId, this.dateTime, this.Status,this.answer);
 
   Map<dynamic, dynamic> toJson() => <dynamic, dynamic>{
     'Question': Question,
     'UserId': UserId,
     'DateTime': dateTime,
     'Status': Status,
+    'Answer':answer
   };
 
   factory UserAskQuestionModel.fromJson(Map<String, dynamic> v) {
@@ -22,6 +23,7 @@ class UserAskQuestionModel {
       v["UserId"] ?? "",
       v["DateTime"] ?? "",
       v["Status"] ?? "",
+      v["Answer"] ?? ""
     );
   }
 }

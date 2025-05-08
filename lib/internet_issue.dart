@@ -104,7 +104,7 @@ class _InternetIssuePageState extends State<InternetIssuePage>{
                                   var question = _textFieldController.text;
                                   UserAskQuestionModel regobj =
                                   UserAskQuestionModel(question, userKey,
-                                      DateTime.now().toString(), "Pending");
+                                      DateTime.now().toString(), "Pending","");
                                   dbRef2.push().set(regobj.toJson());
                                   showDialog(
                                     context: context,
