@@ -36,7 +36,7 @@ class _RoomIssuePageState extends State<RoomIssuePage>{
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Food Issue")),
+      appBar: AppBar(title: const Text("Room Issue")),
       body: Container(
         color: const Color(0xfff2f6f7),
         child: ListView.builder(
@@ -111,22 +111,27 @@ class _RoomIssuePageState extends State<RoomIssuePage>{
                                     builder: (context) {
                                       return AlertDialog(
                                         content: const Text(
-                                            "Thank you for your question. We will connect with you soon. Feel free to ask more queries if you have."),
+                                            " Thank you for your question😊.\n We will connect with you soon 🔜!!\n Feel free to ask more queries ."),
                                         actions: <Widget>[
-                                          OutlinedButton(
-                                            child: const Text('OK'),
-                                            onPressed: () {
-                                              Navigator.of(context).pop();
-                                              Navigator.push(
-                                                context,
-                                                MaterialPageRoute(
-                                                  builder: (context) =>
-                                                  const BottomBar(),
-                                                ),
-                                              );
-                                            },
-                                          )
+                                          Row(
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: [
+                                              OutlinedButton(
+                                                child: const Text('OK'),
+                                                onPressed: () {
+                                                  Navigator.of(context).pop();
+                                                  Navigator.push(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                      builder: (context) => const BottomBar(),
+                                                    ),
+                                                  );
+                                                },
+                                              ),
+                                            ],
+                                          ),
                                         ],
+
                                       );
                                     },
                                   );

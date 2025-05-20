@@ -111,22 +111,27 @@ class _FoodIssuePageState extends State<FoodIssuePage> {
                                     builder: (context) {
                                       return AlertDialog(
                                         content: const Text(
-                                            "Thank you for your question. We will connect with you soon. Feel free to ask more queries if you have."),
+                                            " Thank you for your question😊.\n We will connect with you soon 🔜!!\n Feel free to ask more queries ."),
                                         actions: <Widget>[
-                                          OutlinedButton(
-                                            child: const Text('OK'),
-                                            onPressed: () {
-                                              Navigator.of(context).pop();
-                                              Navigator.push(
-                                                context,
-                                                MaterialPageRoute(
-                                                  builder: (context) =>
-                                                  const BottomBar(),
-                                                ),
-                                              );
-                                            },
-                                          )
+                                          Row(
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: [
+                                              OutlinedButton(
+                                                child: const Text('OK'),
+                                                onPressed: () {
+                                                  Navigator.of(context).pop();
+                                                  Navigator.push(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                      builder: (context) => const BottomBar(),
+                                                    ),
+                                                  );
+                                                },
+                                              ),
+                                            ],
+                                          ),
                                         ],
+
                                       );
                                     },
                                   );

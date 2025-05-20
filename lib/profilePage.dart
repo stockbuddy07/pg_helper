@@ -1,19 +1,14 @@
 // ignore_for_file: file_names, library_private_types_in_public_api, use_build_context_synchronously, non_constant_identifier_names, prefer_typing_uninitialized_variables
 
-// import 'package:arogyasair/EditProfile.dart';
-// import 'package:arogyasair/LandingPage.dart';
-// import 'package:arogyasair/UserChangePassword.dart';
-// import 'package:arogyasair/about.dart';
-// import 'package:arogyasair/contact.dart';
-// import 'package:arogyasair/help_desk.dart';
-// import 'package:arogyasair/saveSharePreferences.dart';
-// import 'package:arogyasair/view_profile.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:pg_helper/saveSharePreferences.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'AboutUs.dart';
+import 'ContactUs.dart';
 import 'EditProfile.dart';
+import 'HelpDesk.dart';
 import 'UserChangePassword.dart';
 import 'ViewProfile.dart';
 import 'drawerSideNavigation.dart';
@@ -33,21 +28,18 @@ class _MyProfileState extends State<MyProfile> {
   var imagePath =
       "https://firebasestorage.googleapis.com/v0/b/arogyasair-157e8.appspot.com/o/UserImage%2FDefaultProfileImage.png?alt=media";
   late Query Ref;
-  late Map data;
+  Map data = {};
   late String username;
   late String name;
   late String mail;
   late String dateOfBirth;
   late String bloodGroup;
-  var birthDate = "Select Birthdate";
+  String birthDate = "Select Birthdate";
   var selectedValue = 0;
   var selectedGender;
-  late String userFirstName;
-  late String userLastName;
-
-  // late String username;
+  String userFirstName = "";
+  String userLastName = "";
   late String userKey;
-  late String fileName;
   String imageName = "";
   late String email;
   final key = 'username';
@@ -63,9 +55,10 @@ class _MyProfileState extends State<MyProfile> {
   Future<void> loadUser() async {
     String? userFirstname = await getData("firstname");
     String? userLastname = await getData("lastname");
+
     setState(() {
-      userFirstName = userFirstname!;
-      userLastName = userLastname!;
+      userFirstName = userFirstname ?? "";
+      userLastName = userLastname ?? "";
     });
   }
 
@@ -74,9 +67,11 @@ class _MyProfileState extends State<MyProfile> {
     String? userEmail = await getData(key1);
     String? userkey = await getKey();
 
-    username = userData!;
-    email = userEmail!;
-    userKey = userkey!;
+    if (userData == null || userEmail == null || userkey == null) return;
+
+    username = userData;
+    email = userEmail;
+    userKey = userkey;
 
     Ref = FirebaseDatabase.instance
         .ref()
@@ -84,7 +79,7 @@ class _MyProfileState extends State<MyProfile> {
         .orderByChild("Username")
         .equalTo(username);
 
-    await Ref.once().then((documentSnapshot) async {
+    await Ref.once().then((documentSnapshot) {
       for (var x in documentSnapshot.snapshot.children) {
         data = x.value as Map;
         username = data["Username"];
@@ -105,291 +100,140 @@ class _MyProfileState extends State<MyProfile> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF9F9F9),
       appBar: AppBar(
-        actionsIconTheme: const IconThemeData(color: Color(0xff12d3c6)),
-        actions: const [],
         backgroundColor: Colors.white,
+        elevation: 0.5,
         automaticallyImplyLeading: false,
-        title: const Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text("Profile",
-                textAlign: TextAlign.start,
-                style:
-                TextStyle(color: Colors.black, fontWeight: FontWeight.bold))
-          ],
+        title: const Text(
+          "My Profile",
+          style: TextStyle(
+              color: Colors.black, fontWeight: FontWeight.w600, fontSize: 20),
         ),
-        iconTheme: const IconThemeData(
-          color: Color(0xff12d3c6),
-        ),
+        iconTheme: const IconThemeData(color: Colors.teal),
       ),
       endDrawer: const DrawerCode(),
-      body: Column(
-        mainAxisSize: MainAxisSize.max,
-        mainAxisAlignment: MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsetsDirectional.fromSTEB(0, 12, 0, 0),
-            child: InkWell(
-              onTap: () async {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const ViewProfile(),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            // Profile Summary
+            InkWell(
+              onTap: () =>
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const ViewProfile()),
                   ),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 24,
+                    backgroundColor: Colors.teal.shade400,
+                    child: Text(
+                      widget.username.isNotEmpty
+                          ? widget.username[0].toUpperCase()
+                          : '',
+                      style: const TextStyle(
+                          fontSize: 20,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('$userFirstName $userLastName',
+                            style: const TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.w600)),
+                        const Text("View Profile",
+                            style: TextStyle(color: Colors.grey)),
+                      ],
+                    ),
+                  ),
+                  const Icon(Icons.arrow_forward_ios, size: 16),
+                ],
+              ),
+            ),
+
+            // Options
+            buildFlatTile("✏️ Edit Profile", const EditProfile()),
+            buildFlatTile("🔒 Change Password", const UserChangePassword()),
+            buildFlatTile("ℹ️ About Us", const AboutUs()),
+            buildFlatTile("📞 Contact Us", const ContactUs()),
+            buildFlatTile("❓ FAQ", const MyHelpDesk()),
+
+            // Logout
+            InkWell(
+              onTap: () async {
+                SharedPreferences prefs = await SharedPreferences.getInstance();
+                await prefs.clear();
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (context) => const Login()),
+                      (route) => false,
                 );
               },
-              child: Padding(
-                padding: const EdgeInsetsDirectional.fromSTEB(16, 5, 0, 0),
-                child: Row(
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                decoration: BoxDecoration(
+                  color: Colors.red.shade50,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    CircleAvatar(
-                      backgroundColor: Colors.teal.shade500,
-                      child: Text(
-                        widget.username.isNotEmpty
-                            ? widget.username[0].toUpperCase()
-                            : '',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 12),
+                      child: Text("🚪 Log Out",
+                          style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.red)),
                     ),
-                    const SizedBox(width: 10),
-                    // Add some space between the avatar and the text
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            widget.username,
-                            style: const TextStyle(
-                                fontSize: 18, color: Colors.black),
-                          ),
-                          const Text('View Profile'),
-                        ],
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const ViewProfile(),
-                          ),
-                        );
-                      },
-                      child: const Padding(
-                        padding: EdgeInsetsDirectional.fromSTEB(0, 0, 12, 0),
-                        child: Icon(
-                          Icons.arrow_forward_ios,
-                          color: Colors.black,
-                          size: 18,
-                        ),
-                      ),
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 12),
+                      child: Icon(Icons.logout, color: Colors.red),
                     ),
                   ],
                 ),
               ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsetsDirectional.fromSTEB(0, 16, 0, 0),
-            child: InkWell(
-              onTap: () async {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const EditProfile()));
-              },
-              child: const Row(
-                children: [
-                  Expanded(
-                    child: Padding(
-                      padding: EdgeInsetsDirectional.fromSTEB(16, 20, 0, 20),
-                      child: Text(
-                        "Edit Profile",
-                        style: TextStyle(fontSize: 18),
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    padding: EdgeInsetsDirectional.fromSTEB(0, 0, 12, 0),
-                    child: Icon(
-                      Icons.arrow_forward_ios,
-                      color: Colors.black,
-                      size: 18,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          InkWell(
-            onTap: () async {
-              Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => const UserChangePassword()));
-            },
-            child: const Row(
-              mainAxisSize: MainAxisSize.max,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Expanded(
-                  child: Padding(
-                    padding: EdgeInsetsDirectional.fromSTEB(16, 20, 0, 20),
-                    child: Text(
-                      "Change Password",
-                      style: TextStyle(fontSize: 18),
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: EdgeInsetsDirectional.fromSTEB(0, 0, 12, 0),
-                  child: Icon(
-                    Icons.arrow_forward_ios,
-                    color: Colors.black,
-                    size: 18,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          InkWell(
-            onTap: () async {
-              // Navigator.push(context,
-              //     MaterialPageRoute(builder: (context) => const AboutUs()));
-            },
-            child: const Row(
-              mainAxisSize: MainAxisSize.max,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Expanded(
-                  child: Padding(
-                    padding: EdgeInsetsDirectional.fromSTEB(16, 20, 0, 20),
-                    child: Text(
-                      "About Us",
-                      style: TextStyle(fontSize: 18),
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: EdgeInsetsDirectional.fromSTEB(0, 0, 12, 0),
-                  child: Icon(
-                    Icons.arrow_forward_ios,
-                    color: Colors.black,
-                    size: 18,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          InkWell(
-            onTap: () async {
-              // Navigator.push(context,
-              //     MaterialPageRoute(
-              //         builder: (context) => ContactUs(
-              //           userLastName: userLastName,
-              //           userFirstName: userFirstName,
-              //         )));
-            },
-            child: const Row(
-              mainAxisSize: MainAxisSize.max,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Expanded(
-                  child: Padding(
-                    padding: EdgeInsetsDirectional.fromSTEB(16, 20, 0, 20),
-                    child: Text(
-                      "Contact Us",
-                      style: TextStyle(fontSize: 18),
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: EdgeInsetsDirectional.fromSTEB(0, 0, 12, 0),
-                  child: Icon(
-                    Icons.arrow_forward_ios,
-                    color: Colors.black,
-                    size: 18,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          InkWell(
-            onTap: () async {
-              // Navigator.push(context,
-              //     MaterialPageRoute(builder: (context) => const MyHelpDesk()));
-            },
-            child: const Row(
-              mainAxisSize: MainAxisSize.max,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Expanded(
-                  child: Padding(
-                    padding: EdgeInsetsDirectional.fromSTEB(16, 20, 0, 20),
-                    child: Text(
-                      "FAQ",
-                      style: TextStyle(fontSize: 18),
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: EdgeInsetsDirectional.fromSTEB(0, 0, 12, 0),
-                  child: Icon(
-                    Icons.arrow_forward_ios,
-                    color: Colors.black,
-                    size: 18,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const Divider(
-            height: 2,
-            thickness: 1,
-            indent: 0,
-            endIndent: 0,
-            color: Colors.white12,
-          ),
-          InkWell(
-            onTap: () async {
-              SharedPreferences prefs = await SharedPreferences.getInstance();
-              prefs.clear();
-              Navigator.pop(context);
-              Navigator.push(context,
-                  MaterialPageRoute(builder: (context) => const Login()));
-            },
-            child: const Row(
-              mainAxisSize: MainAxisSize.max,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Expanded(
-                  child: Padding(
-                    padding: EdgeInsetsDirectional.fromSTEB(16, 20, 0, 20),
-                    child: Text(
-                      "Log Out",
-                      style: TextStyle(fontSize: 18),
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: EdgeInsetsDirectional.fromSTEB(0, 0, 12, 0),
-                  child: Icon(
-                    Icons.logout,
-                    color: Colors.black,
-                    size: 20,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+
+            const SizedBox(height: 6), // Bottom space
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget buildFlatTile(String title, Widget? page) {
+    return InkWell(
+      onTap: page != null
+          ? () =>
+          Navigator.push(
+              context, MaterialPageRoute(builder: (context) => page))
+          : null,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+        margin: const EdgeInsets.symmetric(vertical: 4),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: Colors.grey.shade200),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(title,
+                style: const TextStyle(
+                    fontSize: 16, fontWeight: FontWeight.w500)),
+            const Icon(Icons.arrow_forward_ios, size: 16),
+          ],
+        ),
       ),
     );
   }

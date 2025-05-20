@@ -1,17 +1,15 @@
-// ignore_for_file: file_names, library_private_types_in_public_api, prefer_const_constructors, use_build_context_synchronously
+// ignore_for_file: file_names, library_private_types_in_public_api, prefer_const_constructors
 
-import 'package:firebase_database/firebase_database.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
-import 'package:logger/logger.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:pg_helper/AddMeals.dart';
 import 'package:pg_helper/login.dart';
 import 'package:pg_helper/pendingUserList.dart';
-import 'package:pg_helper/saveSharePreferences.dart';
+import 'package:pg_helper/AdminQuestionView.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-import 'AdminQuestionView.dart';
-import 'firebase_api.dart';
+import 'package:pg_helper/AddRoomsPage.dart';
+import 'package:pg_helper/RoomManagementDashboard.dart';
+import 'package:pg_helper/ShowRoomsPage.dart'; // <-- Added for Show Rooms Navigation
 
 class AdminHomePage extends StatefulWidget {
   final int indexPage;
@@ -19,135 +17,159 @@ class AdminHomePage extends StatefulWidget {
   const AdminHomePage(this.indexPage, {super.key});
 
   @override
-  _HospitalHomePage createState() => _HospitalHomePage();
+  _AdminHomePageState createState() => _AdminHomePageState();
 }
 
-class _HospitalHomePage extends State<AdminHomePage> {
-  Query dbRef2 =
+class _AdminHomePageState extends State<AdminHomePage> {
+  String displayName = "Admin";
+  int totalStudents = 0;
+
+  final DatabaseReference _usersRef =
   FirebaseDatabase.instance.ref().child('PG_helper/tblUser');
-  late String Name;
-  late String? userKey;
-  final key = 'Name';
-  late bool containsKey;
-  var logger = Logger();
-  late String displayName="demo";
-  final _messagingService = MessagingService();
-  final FirebaseMessaging _fcm = FirebaseMessaging.instance;
-  late String? fcmToken;
+
   @override
   void initState() {
     super.initState();
-    // _loadUserData();
+    _fetchTotalStudents();
   }
 
+  Future<void> _fetchTotalStudents() async {
+    final snapshot = await _usersRef.once();
+    if (snapshot.snapshot.value != null) {
+      final data = Map<String, dynamic>.from(snapshot.snapshot.value as Map);
+      setState(() {
+        totalStudents = data.length;
+      });
+    }
+  }
 
+  Future<void> _logout() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => Login()),
+    );
+  }
+
+  void _navigateToPage(Widget page) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => page),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    if (displayName.isEmpty) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
-    } else {
-      return DefaultTabController(
-        initialIndex: widget.indexPage,
-        length: 3,
-        child: Scaffold(
-          appBar: AppBar(
-            backgroundColor: const Color(0xff12d3c6),
-            title: Text(
-              displayName,
-              style: TextStyle(color: Colors.white),
-            ),
-            actions: [
-              PopupMenuButton(
-                itemBuilder: (BuildContext context) {
-                  return [
-                    const PopupMenuItem(
-                      value: 'my_account',
-                      child: Text('My Account'),
-                    ),
-                    const PopupMenuItem(
-                      value: 'Privacy policy',
-                      child: Text('Privacy Policy'),
-                    ),
-                    const PopupMenuItem(
-                      value: 'logout',
-                      child: Text('Logout'),
-                    ),
-                  ];
-                },
-                onSelected: (value) async {
-                  // Handle menu item selection here
-                  if (value == 'my_account') {
-                    // Navigator.push(
-                    //     context,
-                    //     MaterialPageRoute(
-                    //         builder: (context) => HospitalProfile()));
-                  } else if (value == 'Privacy policy') {
-                    // Navigator.push(
-                    //     context,
-                    //     MaterialPageRoute(
-                    //         builder: (context) => PrivacyPolicy()));
-                    // Handle Settings
-                  } else if (value == 'logout') {
-                    SharedPreferences prefs =
-                    await SharedPreferences.getInstance();
-                    prefs.clear();
-                    Navigator.pop(context);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const Login(),
-                      ),
-                    );
-                  }
-                },
-                icon: const Icon(
-                  Icons.more_vert,
-                  color: Colors.white,
-                ),
-              ),
+    return Scaffold(
+      backgroundColor: Colors.grey[100],
+      appBar: AppBar(
+        title: Text(displayName),
+        backgroundColor: Color(0xff12d3c6),
+        actions: [
+          PopupMenuButton<String>(
+            icon: Icon(Icons.more_vert, color: Colors.white),
+            onSelected: (value) {
+              switch (value) {
+                case 'addRooms':
+                  _navigateToPage(AddRoomPage());
+                  break;
+                case 'showRooms':
+                  _navigateToPage(ShowRoomsPage());
+                  break;
+                case 'logout':
+                  _logout();
+                  break;
+              }
+            },
+            itemBuilder: (_) => [
+              PopupMenuItem(value: 'addRooms', child: Text('Add Rooms')),
+              PopupMenuItem(value: 'showRooms', child: Text('Show Rooms')),
+              PopupMenuItem(value: 'logout', child: Text('Logout')),
             ],
-            bottom: TabBar(
-              indicatorColor: Colors.white,
-              labelColor: Colors.white,
-              unselectedLabelColor: Colors.white,
-              tabs: const [
-                Tab(
-                  child: Text(
-                    "ADD MEALS",
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ),
-                Tab(
-                    child: Text(
-                      "REQUESTS",
-                      style: TextStyle(color: Colors.white),
-                    )),
-                Tab(
-                    child: Text(
-                      "APPOINTMENTS",
-                      style: TextStyle(color: Colors.white),
-                    )),
+          ),
+        ],
+      ),
+      body: SingleChildScrollView(
+        padding: EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text("Dashboard", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+            SizedBox(height: 16),
+
+            // Total Students Card
+            Container(
+              width: double.infinity,
+              padding: EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(color: Colors.grey.shade300, blurRadius: 6, offset: Offset(2, 2)),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text("Total Students", style: TextStyle(fontSize: 16, color: Colors.grey[700])),
+                  SizedBox(height: 8),
+                  Text("$totalStudents", style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.teal)),
+                ],
+              ),
+            ),
+
+            SizedBox(height: 20),
+
+            // Service Cards
+            GridView.count(
+              crossAxisCount: 2,
+              shrinkWrap: true,
+              physics: NeverScrollableScrollPhysics(),
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+              children: [
+                _buildDashboardCard("Add Rooms", Icons.meeting_room, Colors.deepPurple, () {
+                  _navigateToPage(RoomManagementDashboard());
+                }),
+                _buildDashboardCard("Add Meals", Icons.fastfood, Colors.green, () {
+                  _navigateToPage(AddDailyMeal());
+                }),
+                _buildDashboardCard("User Requests", Icons.group, Colors.blue, () {
+                  _navigateToPage(PendingUsersPage());
+                }),
+                _buildDashboardCard("Appointments", Icons.event, Colors.orange, () {
+                  _navigateToPage(AdminQuestionView());
+                }),
               ],
             ),
-          ),
-          body: TabBarView(
-            children: [
-              Center(
-                child: AddDailyMeal(),
-              ),
-              Center(
-                child: PendingUsersPage(),
-              ),
-              Center(
-                child: AdminQuestionView(),
-              ),
-            ],
-          ),
+          ],
         ),
-      );
-    }
+      ),
+    );
+  }
+
+  Widget _buildDashboardCard(String title, IconData icon, Color color, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(color: Colors.grey.shade300, blurRadius: 6, offset: Offset(2, 2)),
+          ],
+        ),
+        padding: EdgeInsets.all(16),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 36, color: color),
+            SizedBox(height: 12),
+            Text(title, textAlign: TextAlign.center, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+          ],
+        ),
+      ),
+    );
   }
 }

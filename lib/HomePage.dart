@@ -1,13 +1,15 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:intl/intl.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:pg_helper/saveSharePreferences.dart';
-
+import 'MyQueries_userHomePage.dart';
 import 'drawerSideNavigation.dart';
 import 'firebase_api.dart';
 import 'models/MealsModel.dart';
+import 'HelpDesk.dart';
+
+
 
 class HomePage extends StatefulWidget {
   final String firstname;
@@ -18,20 +20,40 @@ class HomePage extends StatefulWidget {
   _HomePageState createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
-  Query dbRef2 =
-  FirebaseDatabase.instance.ref().child('PG_helper/tblDailyMeals');
-  late String data;
+class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin {
+  Query dbRef2 = FirebaseDatabase.instance.ref().child('PG_helper/tblDailyMeals');
   final key = 'username';
   late String userKey;
+  late String data;
   final _messagingService = MessagingService();
   final FirebaseMessaging _fcm = FirebaseMessaging.instance;
+
+  late AnimationController _controller;
+  late Animation<double> _animation;
+
+  final List<_DashboardItem> _features = [
+    _DashboardItem(" Room Info", Icons.meeting_room, Colors.blue),
+    _DashboardItem(" Today's Meals", Icons.fastfood, Colors.orange),
+    _DashboardItem(" Raise a Query", Icons.message, Colors.green),
+    _DashboardItem(" My Queries", Icons.inbox, Colors.deepPurple),
+    _DashboardItem(" Complaints", Icons.report_problem, Colors.red),
+    _DashboardItem(" Roommates Info", Icons.people, Colors.teal),
+  ];
 
   @override
   void initState() {
     super.initState();
     _messagingService.init(context);
     _loadUserData();
+    _controller = AnimationController(duration: const Duration(milliseconds: 800), vsync: this);
+    _animation = CurvedAnimation(parent: _controller, curve: Curves.easeOutBack);
+    _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 
   Future<void> _loadUserData() async {
@@ -41,257 +63,224 @@ class _HomePageState extends State<HomePage> {
       data = userData!;
       userKey = userkey!;
     });
+
     var fcmToken = await _fcm.getToken();
-    final updatedData = {
-      "UserFCMToken": fcmToken,
-    };
-    final userRef = FirebaseDatabase.instance
-        .ref()
-        .child("PG_helper/tblUser")
-        .child(userKey);
+    final updatedData = {"UserFCMToken": fcmToken};
+    final userRef = FirebaseDatabase.instance.ref().child("PG_helper/tblUser").child(userKey);
     await userRef.update(updatedData);
   }
 
-  var imagePath =
-      "https://firebasestorage.googleapis.com/v0/b/arogyasair-157e8.appspot.com/o/HospitalImage%2Faiims.jpeg?alt=media";
+  Widget _buildAnimatedCard(int index) {
+    final item = _features[index];
+
+    return ScaleTransition(
+      scale: _animation,
+      child: InkWell(
+        onTap: () async {
+          if (item.label.trim() == "Today's Meals") {
+            String todayDate = DateFormat('yyyy-MM-dd').format(DateTime.now());
+            DatabaseReference dbRef = FirebaseDatabase.instance.ref().child('PG_helper/tblDailyMeals');
+
+            DatabaseEvent event = await dbRef.once();
+            Map<dynamic, dynamic> map = event.snapshot.value as Map<dynamic, dynamic>;
+            List<MealData> mealsList = [];
+            map.forEach((key, value) {
+              mealsList.add(MealData.fromMap(value, key));
+            });
+
+            final filteredMeals = mealsList.where((meal) => meal.date == todayDate).toList();
+
+            String breakfast = '', lunch = '', dinner = '';
+            for (var meal in filteredMeals) {
+              breakfast = meal.breakfast;
+              lunch = meal.lunch;
+              dinner = meal.dinner;
+            }
+
+            showDialog(
+              context: context,
+              builder: (context) {
+                return AlertDialog(
+                  title: const Text("Today's Meals"),
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (breakfast.isNotEmpty)
+                        Text(
+                          '🥞 Breakfast: $breakfast',
+                          style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
+                        ),
+                      if (lunch.isNotEmpty)
+                        Text(
+                          '🍛 Lunch: $lunch',
+                          style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
+                        ),
+                      if (dinner.isNotEmpty)
+                        Text(
+                          '🍽️ Dinner: $dinner',
+                          style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
+                        ),
+                      if (breakfast.isEmpty && lunch.isEmpty && dinner.isEmpty)
+                        const Text(
+                          'No meal information available for today.',
+                          style: TextStyle(fontSize: 20),
+                        ),
+                    ],
+                  ),
+
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('CLOSE'),
+                    ),
+                  ],
+                );
+              },
+            );
+          }
+
+          // Redirections
+    else if (item.label.trim() == "Raise a Query") {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const MyHelpDesk()),);
+    }
+    else if (item.label.trim() == "My Queries") {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const MyQueriesPage()),
+      );
+    }
+    else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('${item.label} tapped')),
+
+      );
+    }
+    },
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [item.color.withOpacity(0.9), item.color.withOpacity(0.6)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: item.color.withOpacity(0.3),
+                blurRadius: 10,
+                offset: const Offset(3, 6),
+              ),
+            ],
+          ),
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(item.icon, size: 36, color: Colors.white),
+              const SizedBox(height: 10),
+              Text(
+                item.label,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (BuildContext context, BoxConstraints constraints) {
-        return SizedBox(
-          width: constraints.maxWidth * 1,
-          height: constraints.maxHeight * 1,
-          child: Scaffold(
-            backgroundColor: const Color(0xfff2f6f7),
-            appBar: AppBar(
-              backgroundColor: const Color(0xfff2f6f7),
-              automaticallyImplyLeading: false,
-              title: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text("Welcome",
-                      textAlign: TextAlign.start,
-                      style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey.shade800,
-                          fontWeight: FontWeight.bold)),
-                  Text(
-                    widget.firstname,
-                    textAlign: TextAlign.start,
-                    style: const TextStyle(
-                      color: Colors.black,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  )
-                ],
-              ),
-              iconTheme: const IconThemeData(
-                color: Color(0xff12d3c6),
+    return Scaffold(
+      backgroundColor: const Color(0xfff2f6f7),
+      appBar: AppBar(
+        backgroundColor: const Color(0xfff2f6f7),
+        automaticallyImplyLeading: false,
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text("Welcome",
+                style: TextStyle(fontSize: 12, color: Colors.grey.shade800, fontWeight: FontWeight.bold)),
+            Text(widget.firstname,
+                style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+          ],
+        ),
+        iconTheme: const IconThemeData(color: Color(0xff12d3c6)),
+      ),
+      endDrawer: const DrawerCode(),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+              child: GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: _features.length,
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 12,
+                  mainAxisSpacing: 16,
+                  childAspectRatio: 0.95,
+                ),
+                itemBuilder: (context, index) => _buildAnimatedCard(index),
               ),
             ),
-            endDrawer: const DrawerCode(),
-            body: Container(
-              height: double.maxFinite,
-              color: Colors.white38,
-              child: SingleChildScrollView(
-
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-
-                    const Padding(
-                      padding: EdgeInsets.only(left: 25),
-                      child: Text(
-                        "Meals for Today:",
-                        textAlign: TextAlign.left,
-                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Padding(
-                      padding: const EdgeInsets.only(top: 0),
-                      child: Container(
-                        decoration: const BoxDecoration(
-                          borderRadius: BorderRadius.only(
-                              topRight: Radius.circular(30),
-                              topLeft: Radius.circular(30),
-                              bottomLeft: Radius.circular(30),
-                              bottomRight: Radius.circular(30)
-                          ),
-                          color: Color(0xff12d3c6),
-                        ),
-                        child: StreamBuilder(
-                        stream: dbRef2.onValue,
-                        builder: (BuildContext context, AsyncSnapshot snapshot) {
-                          if (snapshot.hasData && snapshot.data!.snapshot.value != null) {
-                            Map<dynamic, dynamic> map = snapshot.data!.snapshot.value;
-                            List<MealData> mealsList = [];
-                            mealsList.clear();
-                            map.forEach((key, value) {
-                              mealsList.add(MealData.fromMap(value, key));
-                            });
-
-                            // Get today's date in the same format as the database date
-                            String todayDate = DateFormat('yyyy-MM-dd').format(DateTime.now());
-
-                            return Column(
-                              children: [
-                                _buildMealCard(
-                                  mealsList: mealsList,
-                                  todayDate: todayDate,
-                                ),
-                              ],
-                            );
-                          } else {
-                            return const Center(
-                              child: CircularProgressIndicator(),
-                            );
-                          }
-                        },
-                      ),
-                      ),
-                    ),
-// PG Rules & Regulations Section
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 25, vertical: 16),
-                      child: Text(
-                        "PG Rules & Regulations:",
-                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      child: Card(
-                        elevation: 6,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: const [
-                              Text("1. Maintain cleanliness in rooms and common areas."),
-                              SizedBox(height: 8),
-                              Text("2. No loud music or parties after 10 PM."),
-                              SizedBox(height: 8),
-                              Text("3. Outside guests are not allowed without permission."),
-                              SizedBox(height: 8),
-                              Text("4. Meal timings must be followed strictly."),
-                              SizedBox(height: 8),
-                              Text("5. Damages to property will be charged."),
-                              SizedBox(height: 8),
-                              Text("6. Maintain discipline and decorum."),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-
-                  ],
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 25, vertical: 16),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text("PG Rules & Regulations:",
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Card(
+                elevation: 6,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                child: const Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text("1. Maintain cleanliness in rooms and common areas."),
+                      SizedBox(height: 8),
+                      Text("2. No loud music or parties after 10 PM."),
+                      SizedBox(height: 8),
+                      Text("3. Outside guests are not allowed without permission."),
+                      SizedBox(height: 8),
+                      Text("4. Meal timings must be followed strictly."),
+                      SizedBox(height: 8),
+                      Text("5. Damages to property will be charged."),
+                      SizedBox(height: 8),
+                      Text("6. Maintain discipline and decorum."),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildMealCard({
-    required List<MealData> mealsList,
-    required String todayDate,
-  }) {
-    // Filter the meals based on the date
-    List<MealData> filteredMeals = mealsList.where((meal) {
-      return meal.date == todayDate;
-    }).toList();
-
-    // Get the meal content for all meals (Breakfast, Lunch, Dinner)
-    String breakfastContent = '';
-    String lunchContent = '';
-    String dinnerContent = '';
-
-    for (var meal in filteredMeals) {
-      breakfastContent = meal.breakfast;
-      lunchContent = meal.lunch;
-      dinnerContent = meal.dinner;
-    }
-
-    return Padding(
-      padding: const EdgeInsets.all(12.0),
-      child: Card(
-        elevation: 8,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+            const SizedBox(height: 40), // bottom padding
+          ],
         ),
-          child: Container(
-            width: double.maxFinite,
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Breakfast section
-                if (breakfastContent.isNotEmpty)
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Breakfast:',
-                        style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.bold),
-                      ),
-                      Text(
-                        breakfastContent,
-                        style: const TextStyle(fontSize: 16),
-                      ),
-                    ],
-                  ),
-
-                // Space between sections
-                const SizedBox(height: 8),
-
-                // Lunch section
-                if (lunchContent.isNotEmpty)
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Lunch:',
-                        style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.bold),
-                      ),
-                      Text(
-                        lunchContent,
-                        style: const TextStyle(fontSize: 16),
-                      ),
-                    ],
-                  ),
-
-                // Space between sections
-                const SizedBox(height: 8),
-
-                // Dinner section
-                if (dinnerContent.isNotEmpty)
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Dinner:',
-                        style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.bold),
-                      ),
-                      Text(
-                        dinnerContent,
-                        style: const TextStyle(fontSize: 16),
-                      ),
-                    ],
-                  ),
-              ],
-            ),
-          ),
       ),
-
     );
   }
+}
+
+class _DashboardItem {
+  final String label;
+  final IconData icon;
+  final Color color;
+
+  _DashboardItem(this.label, this.icon, this.color);
 }

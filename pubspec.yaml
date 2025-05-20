@@ -57,6 +57,7 @@ dependencies:
   get_storage: any
   mailer: ^6.0.0
   cloud_firestore: ^4.13.5 # or the latest version
+  fl_chart: ^0.64.0
 
 
   # The following adds the Cupertino Icons font to your application.
@@ -91,6 +92,7 @@ flutter:
      - assets/Animation/
      - assets/
      - assets/Animation/help_desk.json
+     - assets/staymate.png
 
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg

@@ -36,7 +36,7 @@ class _ElectricityIssuePageState extends State<ElectricityIssuePage>{
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Food Issue")),
+      appBar: AppBar(title: const Text("Electricity Issue")),
       body: Container(
         color: const Color(0xfff2f6f7),
         child: ListView.builder(
