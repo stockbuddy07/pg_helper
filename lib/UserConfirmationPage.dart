@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'models/RegisterModel.dart';
 import 'models/RegisterRetrieveModel.dart';
-import 'package:pg_helper/showroom.dart';
+import 'package:pg_helper/ShowRoomsPage.dart'; // Ensure this is the correct import path
 
 class UserConfirmationPage extends StatelessWidget {
   final RegisterRetrieveModel user;
@@ -26,33 +26,43 @@ class UserConfirmationPage extends StatelessWidget {
       "Verified",
     );
 
-    await tblUserRef.push().set(regObj.toJson());
-    await tblUserRef.child(user.key!).remove();
+    try {
+      await tblUserRef.push().set(regObj.toJson());
+      await tblUserRef.child(user.key!).remove();
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('User confirmed successfully!')),
-    );
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('User confirmed successfully!')),
+      );
 
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (context) => showroom(
-          username: user.username,
-          email: user.email,
-          contact: user.contact,
+      // Navigate to ShowRoomsPage instead of showroom
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ShowRoomsPage(), // 👈 Navigate here
         ),
-      ),
-    );
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error confirming user: $e')),
+      );
+    }
   }
 
+
   Future<void> _rejectUser(BuildContext context) async {
-    await tblUserRef.child(user.key!).remove();
+    try {
+      await tblUserRef.child(user.key!).remove();
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('User rejected and data deleted successfully.')),
-    );
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('User rejected and data deleted successfully.')),
+      );
 
-    Navigator.pop(context);
+      Navigator.pop(context);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error rejecting user: $e')),
+      );
+    }
   }
 
   Widget _infoRow(String title, String value) {

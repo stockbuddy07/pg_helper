@@ -9,7 +9,7 @@ import 'package:pg_helper/AdminQuestionView.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:pg_helper/AddRoomsPage.dart';
 import 'package:pg_helper/RoomManagementDashboard.dart';
-import 'package:pg_helper/ShowRoomsPage.dart'; // <-- Added for Show Rooms Navigation
+import 'package:pg_helper/ShowRoomsPage.dart';
 
 class AdminHomePage extends StatefulWidget {
   final int indexPage;
@@ -21,7 +21,7 @@ class AdminHomePage extends StatefulWidget {
 }
 
 class _AdminHomePageState extends State<AdminHomePage> {
-  String displayName = "Admin";
+  String displayName = "Welcome Admin";
   int totalStudents = 0;
 
   final DatabaseReference _usersRef =
@@ -66,29 +66,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
       appBar: AppBar(
         title: Text(displayName),
         backgroundColor: Color(0xff12d3c6),
-        actions: [
-          PopupMenuButton<String>(
-            icon: Icon(Icons.more_vert, color: Colors.white),
-            onSelected: (value) {
-              switch (value) {
-                case 'addRooms':
-                  _navigateToPage(AddRoomPage());
-                  break;
-                case 'showRooms':
-                  _navigateToPage(ShowRoomsPage());
-                  break;
-                case 'logout':
-                  _logout();
-                  break;
-              }
-            },
-            itemBuilder: (_) => [
-              PopupMenuItem(value: 'addRooms', child: Text('Add Rooms')),
-              PopupMenuItem(value: 'showRooms', child: Text('Show Rooms')),
-              PopupMenuItem(value: 'logout', child: Text('Logout')),
-            ],
-          ),
-        ],
+        automaticallyImplyLeading: false, // Hides back button
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(16),
@@ -112,7 +90,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text("Total Students", style: TextStyle(fontSize: 16, color: Colors.grey[700])),
+                  Text("Total Users", style: TextStyle(fontSize: 16, color: Colors.grey[700])),
                   SizedBox(height: 8),
                   Text("$totalStudents", style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.teal)),
                 ],
@@ -142,6 +120,32 @@ class _AdminHomePageState extends State<AdminHomePage> {
                   _navigateToPage(AdminQuestionView());
                 }),
               ],
+            ),
+
+            SizedBox(height: 20),
+
+            // Logout Card
+            GestureDetector(
+              onTap: _logout,
+              child: Container(
+                width: double.infinity,
+                padding: EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.redAccent,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(color: Colors.grey.shade300, blurRadius: 6, offset: Offset(2, 2)),
+                  ],
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.logout, color: Colors.white),
+                    SizedBox(width: 10),
+                    Text("Logout", style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                  ],
+                ),
+              ),
             ),
           ],
         ),
