@@ -7,9 +7,7 @@ import 'package:pg_helper/login.dart';
 import 'package:pg_helper/pendingUserList.dart';
 import 'package:pg_helper/AdminQuestionView.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:pg_helper/AddRoomsPage.dart';
 import 'package:pg_helper/RoomManagementDashboard.dart';
-import 'package:pg_helper/ShowRoomsPage.dart';
 
 class AdminHomePage extends StatefulWidget {
   final int indexPage;
