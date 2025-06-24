@@ -7,10 +7,9 @@
 // import 'package:arogyasair/saveSharePreferences.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:flutter/material.dart';
-import 'package:pg_helper/AddMeals.dart';
 import 'package:pg_helper/HomePage.dart';
-import 'package:pg_helper/profilePage.dart';
 import 'package:pg_helper/saveSharePreferences.dart';
+import 'package:pg_helper/profilePage.dart';
 
 import 'HelpDesk.dart';
 import 'PaymentHistory.dart';
@@ -59,7 +58,7 @@ class _BottomBarState extends State<BottomBar> {
       ),
       const Scaffold(
         backgroundColor: Colors.white,
-        body: PaymentHistory(),
+        body: UpiPaymentPage(),
       ),
       const Scaffold(
         backgroundColor: Colors.white,

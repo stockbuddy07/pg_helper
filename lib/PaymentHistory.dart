@@ -1,29 +1,60 @@
-// ignore_for_file: file_names
-
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
-class PaymentHistory extends StatefulWidget {
-  const PaymentHistory({super.key});
+class UpiPaymentPage extends StatefulWidget {
+  const UpiPaymentPage({super.key});
 
   @override
-  State<PaymentHistory> createState() => _PaymentHistoryState();
+  State<UpiPaymentPage> createState() => _UpiPaymentPageState();
 }
 
-class _PaymentHistoryState extends State<PaymentHistory> {
+class _UpiPaymentPageState extends State<UpiPaymentPage> {
+  final String upiId = 'example@upi';
+final String payeeName = 'Your Business Name';
+final String amount = '100'; // Optional: You can make it dynamic
+
   @override
   Widget build(BuildContext context) {
+    String upiUrl =
+        'upi://pay?pa=$upiId&pn=$payeeName&am=$amount&cu=INR';
     return Scaffold(
       appBar: AppBar(
-        title: const Text('History Page'),
-        backgroundColor: Color(0xff12d3c6), // same teal color
+        title: Text('Pay via UPI'),
+        backgroundColor: Colors.deepPurple,
       ),
-      body: const Center(
-        child: Text(
-          'History',
-          style: TextStyle(
-            fontSize: 30,
-            fontWeight: FontWeight.bold,
-            color: Colors.black,
+      body: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              QrImageView(
+                data: upiUrl,
+                version: QrVersions.auto,
+                size: 240.0,
+              ),
+              SizedBox(height: 24),
+              Text(
+                'Scan to Pay',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 12),
+              Text(
+                'Or use UPI ID:',
+                style: TextStyle(fontSize: 16),
+              ),
+              SizedBox(height: 6),
+              SelectableText(
+                upiId,
+                style: TextStyle(fontSize: 18, color: Colors.blueAccent),
+              ),
+              SizedBox(height: 30),
+              Text(
+                'Amount: ₹$amount',
+                style: TextStyle(fontSize: 18),
+              ),
+            ],
           ),
         ),
       ),
