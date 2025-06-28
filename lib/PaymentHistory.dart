@@ -1,6 +1,5 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:qr_flutter/qr_flutter.dart';
 
 class UpiPaymentPage extends StatefulWidget {
   const UpiPaymentPage({super.key});
@@ -10,14 +9,12 @@ class UpiPaymentPage extends StatefulWidget {
 }
 
 class _UpiPaymentPageState extends State<UpiPaymentPage> {
-  final String upiId = 'example@upi';
-final String payeeName = 'Your Business Name';
-final String amount = '100'; // Optional: You can make it dynamic
+  final String upiId = 'harshilsfilm@okhdfcbank';
+  final String payeeName = 'Harshil Patel';
+  final String amount = '13000';
 
   @override
   Widget build(BuildContext context) {
-    String upiUrl =
-        'upi://pay?pa=$upiId&pn=$payeeName&am=$amount&cu=INR';
     return Scaffold(
       appBar: AppBar(
         title: Text('Pay via UPI'),
@@ -29,10 +26,11 @@ final String amount = '100'; // Optional: You can make it dynamic
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              QrImageView(
-                data: upiUrl,
-                version: QrVersions.auto,
-                size: 240.0,
+              // ✅ Display static QR image from assets
+              Image.asset(
+                'assets/qr.jpg',
+                width: 240,
+                height: 240,
               ),
               SizedBox(height: 24),
               Text(
