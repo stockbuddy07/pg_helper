@@ -1,3 +1,4 @@
+
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -179,21 +180,31 @@ class _LoginState extends State<Login> {
   }
 
   void _performLogin(BuildContext context) async {
-    var username = controlleruname.text;
-    var password = controllerpassword.text;
+    var username = controlleruname.text.trim();
+    var password = controllerpassword.text.trim();
     var encPassword = encryptString(password);
+
     Query dbRef2 = FirebaseDatabase.instance
         .ref()
         .child('PG_helper/tblUser')
         .orderByChild("Username")
         .equalTo(username);
+
     String msg = "Invalid Username or Password..! Please check..!!";
     Map data;
-    var count = 0;
+    bool loginSuccess = false;
+
     await dbRef2.once().then((documentSnapshot) async {
+      if (documentSnapshot.snapshot.children.isEmpty) {
+        // No user found
+        loginSuccess = false;
+        return;
+      }
+
       for (var x in documentSnapshot.snapshot.children) {
         String? key = x.key;
         data = x.value as Map;
+
         if (data["Username"] == username &&
             data["Password"].toString() == encPassword) {
           await saveData('username', data["Username"]);
@@ -202,55 +213,69 @@ class _LoginState extends State<Login> {
           await saveData('email', data["Email"]);
           await saveData('status', data["Status"]);
           await saveData('key', key);
-          count = count + 1;
+          loginSuccess = true;
 
-          Navigator.pop(context);
+          Navigator.pop(context); // close loading or previous screen
 
           if (data["Email"] == "shubham@admin.com") {
-            Navigator.push(
+            Navigator.pushReplacement(
               context,
               MaterialPageRoute(builder: (context) => const AdminHomePage(0)),
             );
           } else if (data["Status"] == "Verified") {
-            Navigator.push(
+            Navigator.pushReplacement(
               context,
               MaterialPageRoute(builder: (context) => const BottomBar()),
             );
           } else {
-            count = 0;
-            msg = "Sorry..! Wrong Username or Password";
-            _showSnackbar(context, msg);
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const Login()),
+            // If user exists but not verified
+            msg = "Your account is not verified yet.";
+            showDialog(
+              context: context,
+              builder: (context) {
+                return AlertDialog(
+                  title: const Text("Account Not Verified"),
+                  content: Text(msg),
+                  actions: <Widget>[
+                    OutlinedButton(
+                      child: const Text('OK'),
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                    )
+                  ],
+                );
+              },
             );
           }
-        } else {
-          msg = "Sorry..! Wrong Username or Password";
-          _showSnackbar(context, msg);
+
+          break; // Stop loop after successful login
         }
       }
-      if (count == 0) {
-        showDialog(
-          context: context,
-          builder: (context) {
-            return AlertDialog(
-              title: const Text("Alert Message"),
-              content: Text(msg),
-              actions: <Widget>[
-                OutlinedButton(
-                  child: const Text('OK'),
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
-                )
-              ],
-            );
-          },
-        );
-      }
     });
+
+    // Show alert box only if login failed
+    if (!loginSuccess) {
+      showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: const Text("Login Failed"),
+            content: Text(msg),
+            actions: <Widget>[
+              OutlinedButton(
+                child: const Text('OK'),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              )
+            ],
+          );
+        },
+      );
+    }
   }
+
 
   String encryptString(String originalString) {
     var bytes = utf8.encode(originalString);

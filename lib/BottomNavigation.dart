@@ -82,7 +82,7 @@ class _BottomBarState extends State<BottomBar> {
         color: Colors.white,
         child: CurvedNavigationBar(
           backgroundColor: const Color(0x0000ffff),
-          color: const Color(0xff12d3c6),
+          color: Colors.blueAccent,
           animationDuration: const Duration(milliseconds: 500),
           onTap: (index) {
             setState(() {

@@ -50,10 +50,9 @@ class _MyHelpDeskState extends State<MyHelpDesk> {
         title: const Text(
           'Help Desk',
           style: TextStyle(
-            color: Colors.black,
-          ),
+              color: Colors.black, fontWeight: FontWeight.w600, fontSize: 20),
         ),
-        iconTheme: const IconThemeData(color: Color(0xff12d3c6)),
+        iconTheme: const IconThemeData(color: Colors.blueAccent),
       ),
       endDrawer: const DrawerCode(),
       body: Container(
@@ -69,7 +68,7 @@ class _MyHelpDeskState extends State<MyHelpDesk> {
                   gradient: const LinearGradient(
                     begin: Alignment.centerLeft,
                     end: Alignment.centerRight,
-                    colors: [Color(0xff12d3c6), Color(0xff12d3c6)],
+                    colors: [Colors.blueAccent, Colors.blueAccent],
                   ),
                   borderRadius: BorderRadius.circular(16),
                 ),
@@ -152,7 +151,7 @@ class _MyHelpDeskState extends State<MyHelpDesk> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 40, color: const Color(0xff12d3c6)),
+            Icon(icon, size: 40, color: Colors.blueAccent),
             const SizedBox(height: 8),
             Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
           ],

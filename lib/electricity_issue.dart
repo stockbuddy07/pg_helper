@@ -54,7 +54,7 @@ class _ElectricityIssuePageState extends State<ElectricityIssuePage>{
                         gradient: const LinearGradient(
                           begin: Alignment.centerLeft,
                           end: Alignment.centerRight,
-                          colors: [Color(0xff12d3c6), Color(0xff12d3c6)],
+                          colors: [Colors.blueAccent,Colors.blueAccent],
                         ),
                         borderRadius: BorderRadius.circular(16),
                       ),
@@ -135,7 +135,7 @@ class _ElectricityIssuePageState extends State<ElectricityIssuePage>{
                               style: ButtonStyle(
                                 backgroundColor:
                                 MaterialStateProperty.all<Color>(
-                                  const Color(0xff12d3c6), // Change color here
+                                  Colors.blueAccent, // Change color here
                                 ),
                               ),
                               child: const Text(

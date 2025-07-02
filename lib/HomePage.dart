@@ -11,6 +11,9 @@ import 'HelpDesk.dart';
 
 
 
+// imports remain unchanged
+// imports remain unchanged
+
 class HomePage extends StatefulWidget {
   final String firstname;
 
@@ -21,22 +24,22 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin {
-  Query dbRef2 = FirebaseDatabase.instance.ref().child('PG_helper/tblDailyMeals');
   final key = 'username';
   late String userKey;
   late String data;
+
   final _messagingService = MessagingService();
   final FirebaseMessaging _fcm = FirebaseMessaging.instance;
 
   late AnimationController _controller;
   late Animation<double> _animation;
 
+  String breakfast = '';
+  String lunch = '';
+  String dinner = '';
+
   final List<_DashboardItem> _features = [
     _DashboardItem(" Room Info", Icons.meeting_room, Colors.blue),
-    _DashboardItem(" Today's Meals", Icons.fastfood, Colors.orange),
-    _DashboardItem(" Raise a Query", Icons.message, Colors.green),
-    _DashboardItem(" My Queries", Icons.inbox, Colors.deepPurple),
-    _DashboardItem(" Complaints", Icons.report_problem, Colors.red),
     _DashboardItem(" Roommates Info", Icons.people, Colors.teal),
   ];
 
@@ -45,15 +48,10 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     super.initState();
     _messagingService.init(context);
     _loadUserData();
+    _loadTodayMeals();
     _controller = AnimationController(duration: const Duration(milliseconds: 800), vsync: this);
     _animation = CurvedAnimation(parent: _controller, curve: Curves.easeOutBack);
     _controller.forward();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
   }
 
   Future<void> _loadUserData() async {
@@ -70,95 +68,42 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     await userRef.update(updatedData);
   }
 
+  Future<void> _loadTodayMeals() async {
+    String todayDate = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    DatabaseReference dbRef = FirebaseDatabase.instance.ref().child('PG_helper/tblDailyMeals');
+
+    DatabaseEvent event = await dbRef.once();
+    if (event.snapshot.value == null) return;
+
+    Map<dynamic, dynamic> map = event.snapshot.value as Map<dynamic, dynamic>;
+    List<MealData> mealsList = [];
+    map.forEach((key, value) {
+      mealsList.add(MealData.fromMap(value, key));
+    });
+
+    final filteredMeals = mealsList.where((meal) => meal.date == todayDate).toList();
+
+    for (var meal in filteredMeals) {
+      setState(() {
+        breakfast = meal.breakfast;
+        lunch = meal.lunch;
+        dinner = meal.dinner;
+      });
+    }
+  }
+
   Widget _buildAnimatedCard(int index) {
     final item = _features[index];
-
     return ScaleTransition(
       scale: _animation,
       child: InkWell(
-        onTap: () async {
-          if (item.label.trim() == "Today's Meals") {
-            String todayDate = DateFormat('yyyy-MM-dd').format(DateTime.now());
-            DatabaseReference dbRef = FirebaseDatabase.instance.ref().child('PG_helper/tblDailyMeals');
-
-            DatabaseEvent event = await dbRef.once();
-            Map<dynamic, dynamic> map = event.snapshot.value as Map<dynamic, dynamic>;
-            List<MealData> mealsList = [];
-            map.forEach((key, value) {
-              mealsList.add(MealData.fromMap(value, key));
-            });
-
-            final filteredMeals = mealsList.where((meal) => meal.date == todayDate).toList();
-
-            String breakfast = '', lunch = '', dinner = '';
-            for (var meal in filteredMeals) {
-              breakfast = meal.breakfast;
-              lunch = meal.lunch;
-              dinner = meal.dinner;
-            }
-
-            showDialog(
-              context: context,
-              builder: (context) {
-                return AlertDialog(
-                  title: const Text("Today's Meals"),
-                  content: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (breakfast.isNotEmpty)
-                        Text(
-                          '🥞 Breakfast: $breakfast',
-                          style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
-                        ),
-                      if (lunch.isNotEmpty)
-                        Text(
-                          '🍛 Lunch: $lunch',
-                          style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
-                        ),
-                      if (dinner.isNotEmpty)
-                        Text(
-                          '🍽️ Dinner: $dinner',
-                          style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
-                        ),
-                      if (breakfast.isEmpty && lunch.isEmpty && dinner.isEmpty)
-                        const Text(
-                          'No meal information available for today.',
-                          style: TextStyle(fontSize: 20),
-                        ),
-                    ],
-                  ),
-
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('CLOSE'),
-                    ),
-                  ],
-                );
-              },
-            );
+        onTap: () {
+          if (item.label.trim() == "Raise a Query") {
+            Navigator.push(context, MaterialPageRoute(builder: (context) => const MyHelpDesk()));
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${item.label} tapped')));
           }
-
-          // Redirections
-    else if (item.label.trim() == "Raise a Query") {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const MyHelpDesk()),);
-    }
-    else if (item.label.trim() == "My Queries") {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const MyQueriesPage()),
-      );
-    }
-    else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${item.label} tapped')),
-
-      );
-    }
-    },
+        },
         borderRadius: BorderRadius.circular(20),
         child: Container(
           decoration: BoxDecoration(
@@ -185,14 +130,34 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
               Text(
                 item.label,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                ),
+                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white),
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMealCard(String title, String value, IconData icon) {
+    return Expanded(
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 6),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [BoxShadow(color: Colors.grey.shade300, blurRadius: 6, offset: const Offset(2, 3))],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 30, color: Colors.blueAccent),
+            const SizedBox(height: 8),
+            Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 4),
+            Text(value.isNotEmpty ? value : "Not Available", textAlign: TextAlign.center),
+          ],
         ),
       ),
     );
@@ -214,14 +179,33 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                 style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
           ],
         ),
-        iconTheme: const IconThemeData(color: Color(0xff12d3c6)),
+        iconTheme: const IconThemeData(color: Colors.blueAccent),
       ),
       endDrawer: const DrawerCode(),
       body: SingleChildScrollView(
         child: Column(
           children: [
+            const SizedBox(height: 12),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text("🍽️ Today's Meals", style: Theme.of(context).textTheme.titleMedium),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              child: Row(
+                children: [
+                  _buildMealCard("Breakfast", breakfast, Icons.breakfast_dining),
+                  _buildMealCard("Lunch", lunch, Icons.lunch_dining),
+                  _buildMealCard("Dinner", dinner, Icons.dinner_dining),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
               child: GridView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
@@ -239,7 +223,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
               padding: EdgeInsets.symmetric(horizontal: 25, vertical: 16),
               child: Align(
                 alignment: Alignment.centerLeft,
-                child: Text("PG Rules & Regulations:",
+                child: Text("📌 PG Rules & Regulations:",
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
               ),
             ),
@@ -269,7 +253,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                 ),
               ),
             ),
-            const SizedBox(height: 40), // bottom padding
+            const SizedBox(height: 40),
           ],
         ),
       ),
@@ -284,3 +268,4 @@ class _DashboardItem {
 
   _DashboardItem(this.label, this.icon, this.color);
 }
+

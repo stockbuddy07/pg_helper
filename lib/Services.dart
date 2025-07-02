@@ -16,8 +16,7 @@ class _ServicesState extends State<Services> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('PG Services'),
-        backgroundColor: Color(0xff12d3c6),
-
+        backgroundColor: Colors.transparent,
       ),
       endDrawer: const DrawerCode(),
       body: SingleChildScrollView(
@@ -60,7 +59,7 @@ class _ServicesState extends State<Services> {
               style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xff12d3c6)),
+                  color: Colors.blueAccent),
             ),
             const SizedBox(height: 8),
             Text(

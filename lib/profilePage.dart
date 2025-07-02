@@ -1,4 +1,4 @@
-// ignore_for_file: file_names, library_private_types_in_public_api, use_build_context_synchronously, non_constant_identifier_names, prefer_typing_uninitialized_variables
+// ignore_for_file: file_names, use_build_context_synchronously, prefer_typing_uninitialized_variables
 
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
@@ -12,7 +12,7 @@ import 'HelpDesk.dart';
 import 'UserChangePassword.dart';
 import 'ViewProfile.dart';
 import 'drawerSideNavigation.dart';
-import 'login.dart';
+import 'main.dart';
 
 class MyProfile extends StatefulWidget {
   final String username;
@@ -25,23 +25,22 @@ class MyProfile extends StatefulWidget {
 }
 
 class _MyProfileState extends State<MyProfile> {
-  var imagePath =
+  String imagePath =
       "https://firebasestorage.googleapis.com/v0/b/arogyasair-157e8.appspot.com/o/UserImage%2FDefaultProfileImage.png?alt=media";
-  late Query Ref;
+
   Map data = {};
-  late String username;
-  late String name;
-  late String mail;
-  late String dateOfBirth;
-  late String bloodGroup;
-  String birthDate = "Select Birthdate";
-  var selectedValue = 0;
-  var selectedGender;
-  String userFirstName = "";
-  String userLastName = "";
-  late String userKey;
-  String imageName = "";
-  late String email;
+  String username = '';
+  String name = '';
+  String mail = '';
+  String dateOfBirth = '';
+  String bloodGroup = '';
+  String selectedGender = '';
+  String userFirstName = '';
+  String userLastName = '';
+  String userKey = '';
+  String imageName = '';
+  String email = '';
+
   final key = 'username';
   final key1 = 'email';
 
@@ -53,188 +52,176 @@ class _MyProfileState extends State<MyProfile> {
   }
 
   Future<void> loadUser() async {
-    String? userFirstname = await getData("firstname");
-    String? userLastname = await getData("lastname");
+    final userFirstname = await getData("firstname");
+    final userLastname = await getData("lastname");
 
     setState(() {
-      userFirstName = userFirstname ?? "";
-      userLastName = userLastname ?? "";
+      userFirstName = userFirstname ?? '';
+      userLastName = userLastname ?? '';
     });
   }
 
   Future<void> _loadUserData() async {
-    String? userData = await getData(key);
-    String? userEmail = await getData(key1);
-    String? userkey = await getKey();
+    final userData = await getData(key) ?? '';
+    final userEmail = await getData(key1) ?? '';
+    final userkey = await getKey() ?? '';
 
-    if (userData == null || userEmail == null || userkey == null) return;
+    setState(() {
+      username = userData;
+      email = userEmail;
+      userKey = userkey;
+    });
 
-    username = userData;
-    email = userEmail;
-    userKey = userkey;
-
-    Ref = FirebaseDatabase.instance
+    final ref = FirebaseDatabase.instance
         .ref()
-        .child("PG_helper/tblUser")
+        .child("ArogyaSair/tblUser")
         .orderByChild("Username")
         .equalTo(username);
 
-    await Ref.once().then((documentSnapshot) {
-      for (var x in documentSnapshot.snapshot.children) {
-        data = x.value as Map;
-        username = data["Username"];
-        name = data["Name"];
-        mail = data["Email"];
-        dateOfBirth = data["DOB"];
-        bloodGroup = data["BloodGroup"];
-        selectedGender ??= data["Gender"];
-        if (data["Photo"] != null) {
-          imagePath =
-          "https://firebasestorage.googleapis.com/v0/b/arogyasair-157e8.appspot.com/o/UserImage%2F${data["Photo"]}?alt=media";
-          imageName = data["Photo"];
-        }
+    final snap = await ref.once();
+
+    if (snap.snapshot.exists) {
+      for (final x in snap.snapshot.children) {
+        final mapData = x.value as Map<dynamic, dynamic>;
+
+        setState(() {
+          name = mapData["Name"] ?? '';
+          mail = mapData["Email"] ?? '';
+          dateOfBirth = mapData["DOB"] ?? '';
+          bloodGroup = mapData["BloodGroup"] ?? '';
+          selectedGender = mapData["Gender"] ?? '';
+          imageName = mapData["Photo"] ?? '';
+
+          if (imageName.isNotEmpty) {
+            imagePath =
+            "https://firebasestorage.googleapis.com/v0/b/arogyasair-157e8.appspot.com/o/UserImage%2F$imageName?alt=media";
+          }
+        });
       }
-    });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF9F9F9),
+      backgroundColor: Colors.white,
       appBar: AppBar(
+        actionsIconTheme: const IconThemeData(color: Colors.blueAccent),
         backgroundColor: Colors.white,
-        elevation: 0.5,
-        automaticallyImplyLeading: false,
         title: const Text(
-          "My Profile",
-          style: TextStyle(
-              color: Colors.black, fontWeight: FontWeight.w600, fontSize: 20),
+          'Profile',
+          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
         ),
-        iconTheme: const IconThemeData(color: Colors.teal),
+        iconTheme: const IconThemeData(color: Colors.black),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
       endDrawer: const DrawerCode(),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            // Profile Summary
-            InkWell(
-              onTap: () =>
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const ViewProfile()),
-                  ),
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    radius: 24,
-                    backgroundColor: Colors.teal.shade400,
-                    child: Text(
-                      widget.username.isNotEmpty
-                          ? widget.username[0].toUpperCase()
-                          : '',
-                      style: const TextStyle(
-                          fontSize: 20,
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('$userFirstName $userLastName',
-                            style: const TextStyle(
-                                fontSize: 16, fontWeight: FontWeight.w600)),
-                        const Text("View Profile",
-                            style: TextStyle(color: Colors.grey)),
-                      ],
-                    ),
-                  ),
-                  const Icon(Icons.arrow_forward_ios, size: 16),
-                ],
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(top: 12),
+            child: InkWell(
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ViewProfile()),
               ),
-            ),
-
-            // Options
-            buildFlatTile("✏️ Edit Profile", const EditProfile()),
-            buildFlatTile("🔒 Change Password", const UserChangePassword()),
-            buildFlatTile("ℹ️ About Us", const AboutUs()),
-            buildFlatTile("📞 Contact Us", const ContactUs()),
-            buildFlatTile("❓ FAQ", const MyHelpDesk()),
-
-            // Logout
-            InkWell(
-              onTap: () async {
-                SharedPreferences prefs = await SharedPreferences.getInstance();
-                await prefs.clear();
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(builder: (context) => const Login()),
-                      (route) => false,
-                );
-              },
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                decoration: BoxDecoration(
-                  color: Colors.red.shade50,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              child: Padding(
+                padding: const EdgeInsets.only(left: 16, top: 5),
+                child: Row(
                   children: [
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 12),
-                      child: Text("🚪 Log Out",
-                          style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                              color: Colors.red)),
+                    CircleAvatar(
+                      radius: 40,
+                      backgroundColor: Colors.blueAccent,
+                      child: Text(
+                        username.isNotEmpty ? username[0].toUpperCase() : '',
+                        style: const TextStyle(
+                          fontSize: 32,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 12),
-                      child: Icon(Icons.logout, color: Colors.red),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(username,
+                              style: const TextStyle(
+                                  fontSize: 18, color: Colors.black)),
+                          const Text('View Profile'),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.arrow_forward_ios,
+                          size: 18, color: Colors.black),
+                      onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const ViewProfile()),
+                      ),
                     ),
                   ],
                 ),
               ),
             ),
-
-            const SizedBox(height: 6), // Bottom space
-          ],
-        ),
+          ),
+          _menuTile('Edit Profile', const EditProfile()),
+          _menuTile('Change Password', const UserChangePassword()),
+          _menuTile('About Us', const AboutUs()),
+          InkWell(
+            onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => ContactUs(
+                      userLastName: userLastName,
+                      userFirstName: userFirstName,
+                    ))),
+            child: _menuRow('Contact Us'),
+          ),
+          _menuTile('FAQ', const MyHelpDesk()),
+          const Divider(thickness: 1, color: Colors.white12),
+          InkWell(
+            onTap: () async {
+              final prefs = await SharedPreferences.getInstance();
+              await prefs.clear();
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => const MyApp()),
+              );
+            },
+            child: _menuRow('Log Out', icon: Icons.logout),
+          ),
+        ],
       ),
     );
   }
 
-  Widget buildFlatTile(String title, Widget? page) {
-    return InkWell(
-      onTap: page != null
-          ? () =>
-          Navigator.push(
-              context, MaterialPageRoute(builder: (context) => page))
-          : null,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
-        margin: const EdgeInsets.symmetric(vertical: 4),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: Colors.grey.shade200),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(title,
-                style: const TextStyle(
-                    fontSize: 16, fontWeight: FontWeight.w500)),
-            const Icon(Icons.arrow_forward_ios, size: 16),
-          ],
-        ),
-      ),
-    );
-  }
+  Widget _menuTile(String title, Widget page) => InkWell(
+    onTap: () => Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => page),
+    ),
+    child: _menuRow(title),
+  );
+
+  Widget _menuRow(String title, {IconData icon = Icons.arrow_forward_ios}) =>
+      Row(
+        children: [
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 20, 0, 20),
+              child: Text(title, style: const TextStyle(fontSize: 18)),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: Icon(icon, size: 18, color: Colors.black),
+          ),
+        ],
+      );
 }

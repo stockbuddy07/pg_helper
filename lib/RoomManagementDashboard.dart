@@ -5,8 +5,14 @@ import 'package:pg_helper/AddRoomsPage.dart';
 import 'ModifyRooms.dart';
 import 'ShowRoomsPage.dart';
 
-class RoomManagementDashboard extends StatelessWidget {
+class RoomManagementDashboard extends StatefulWidget {
   const RoomManagementDashboard({super.key});
+
+  @override
+  State<RoomManagementDashboard> createState() => _RoomManagementDashboardState();
+}
+
+class _RoomManagementDashboardState extends State<RoomManagementDashboard> {
 
   void _navigate(BuildContext context, Widget page) {
     Navigator.push(context, MaterialPageRoute(builder: (_) => page));
@@ -23,16 +29,16 @@ class RoomManagementDashboard extends StatelessWidget {
             BoxShadow(color: Colors.grey.shade300, blurRadius: 6, offset: Offset(2, 2)),
           ],
         ),
-        padding: EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(icon, size: 36, color: color),
-            SizedBox(height: 12),
+            const SizedBox(height: 12),
             Text(
               title,
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
           ],
         ),
@@ -44,8 +50,8 @@ class RoomManagementDashboard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Room Management"),
-        backgroundColor: Color(0xff12d3c6),
+        title: const Text("Room Management"),
+        backgroundColor: Colors.transparent,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -54,13 +60,13 @@ class RoomManagementDashboard extends StatelessWidget {
           crossAxisSpacing: 12,
           mainAxisSpacing: 12,
           children: [
-            _buildCard(context, "Add Room", Icons.add_business, Colors.deepPurple, () {
+            _buildCard(context, "Add Room", Icons.add_business, Colors.blueAccent, () {
               _navigate(context, AddRoomPage());
             }),
-            _buildCard(context, "Show Rooms", Icons.meeting_room, Colors.green, () {
+            _buildCard(context, "Show Rooms", Icons.meeting_room, Colors.blueAccent, () {
               _navigate(context, ShowRoomsPage());
             }),
-            _buildCard(context, "Modify Rooms", Icons.edit, Colors.orange, () {
+            _buildCard(context, "Modify Rooms", Icons.edit, Colors.blueAccent, () {
               _navigate(context, const ModifyRoomsPage());
             }),
           ],

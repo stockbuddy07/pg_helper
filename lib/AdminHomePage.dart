@@ -62,91 +62,87 @@ class _AdminHomePageState extends State<AdminHomePage> {
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        title: Text(displayName),
-        backgroundColor: Color(0xff12d3c6),
-        automaticallyImplyLeading: false, // Hides back button
+        backgroundColor: Colors.transparent,
+        automaticallyImplyLeading: false,
+        title: Text(displayName, style: TextStyle(color: Colors.black)),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout, color: Colors.black),
+            tooltip: 'Logout',
+            onPressed: _logout,
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("Dashboard", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-            SizedBox(height: 16),
-
-            // Total Students Card
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(color: Colors.grey.shade300, blurRadius: 6, offset: Offset(2, 2)),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text("Total Users", style: TextStyle(fontSize: 16, color: Colors.grey[700])),
-                  SizedBox(height: 8),
-                  Text("$totalStudents", style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.teal)),
-                ],
-              ),
+            _infoCard(
+              title: "Total Users",
+              value: "$totalStudents",
+              color: Colors.blueAccent,
+              icon: Icons.people,
             ),
 
-            SizedBox(height: 20),
+            SizedBox(height: 24),
 
-            // Service Cards
             GridView.count(
               crossAxisCount: 2,
               shrinkWrap: true,
               physics: NeverScrollableScrollPhysics(),
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 16,
               children: [
-                _buildDashboardCard("Add Rooms", Icons.meeting_room, Colors.deepPurple, () {
+                _buildDashboardCard("Add Rooms", Icons.meeting_room, Colors.blueAccent, () {
                   _navigateToPage(RoomManagementDashboard());
                 }),
-                _buildDashboardCard("Add Meals", Icons.fastfood, Colors.green, () {
+                _buildDashboardCard("Add Meals", Icons.fastfood, Colors.blueAccent, () {
                   _navigateToPage(AddDailyMeal());
                 }),
-                _buildDashboardCard("User Requests", Icons.group, Colors.blue, () {
+                _buildDashboardCard("User Requests", Icons.group, Colors.blueAccent, () {
                   _navigateToPage(PendingUsersPage());
                 }),
-                _buildDashboardCard("Appointments", Icons.event, Colors.orange, () {
+                _buildDashboardCard("Appointments", Icons.event, Colors.blueAccent, () {
                   _navigateToPage(AdminQuestionView());
                 }),
               ],
             ),
 
-            SizedBox(height: 20),
-
-            // Logout Card
-            GestureDetector(
-              onTap: _logout,
-              child: Container(
-                width: double.infinity,
-                padding: EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.redAccent,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(color: Colors.grey.shade300, blurRadius: 6, offset: Offset(2, 2)),
-                  ],
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.logout, color: Colors.white),
-                    SizedBox(width: 10),
-                    Text("Logout", style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-                  ],
-                ),
-              ),
-            ),
+            SizedBox(height: 30),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _infoCard({required String title, required String value, required Color color, required IconData icon}) {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(color: Colors.grey.shade300, blurRadius: 6, offset: Offset(2, 2)),
+        ],
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            backgroundColor: color.withOpacity(0.1),
+            child: Icon(icon, color: color),
+          ),
+          SizedBox(width: 16),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title, style: TextStyle(fontSize: 16, color: Colors.grey[700])),
+              SizedBox(height: 4),
+              Text(value, style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: color)),
+            ],
+          ),
+        ],
       ),
     );
   }

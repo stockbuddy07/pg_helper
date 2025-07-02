@@ -1,13 +1,11 @@
-// ignore_for_file: use_build_context_synchronously, library_private_types_in_public_api, file_names
-
+import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:pg_helper/login.dart';
 import 'package:pg_helper/profilePage.dart';
 import 'package:pg_helper/queries.dart';
 import 'package:pg_helper/saveSharePreferences.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
+import 'ContactUs.dart';
 import 'Services.dart';
 
 class DrawerCode extends StatefulWidget {
@@ -18,12 +16,14 @@ class DrawerCode extends StatefulWidget {
 }
 
 class _DrawerCode extends State<DrawerCode> {
-  late String username;
-  late String email;
+  late String username = '';
+  late String email = '';
+  late String userFirstName = '';
+  late String userLastName = '';
+  String? profileImagePath;
+
   final key = 'username';
   final key1 = 'email';
-  late String userFirstName;
-  late String userLastName;
 
   @override
   void initState() {
@@ -35,9 +35,11 @@ class _DrawerCode extends State<DrawerCode> {
   Future<void> loadUser() async {
     String? userFirstname = await getData("firstname");
     String? userLastname = await getData("lastname");
+    String? profileImage = await getData("userProfileImage"); // Load image path
     setState(() {
-      userFirstName = userFirstname!;
-      userLastName = userLastname!;
+      userFirstName = userFirstname ?? '';
+      userLastName = userLastname ?? '';
+      profileImagePath = profileImage;
     });
   }
 
@@ -45,8 +47,8 @@ class _DrawerCode extends State<DrawerCode> {
     String? userData = await getData(key);
     String? userEmail = await getData(key1);
     setState(() {
-      username = userData!;
-      email = userEmail!;
+      username = userData ?? '';
+      email = userEmail ?? '';
     });
   }
 
@@ -57,75 +59,55 @@ class _DrawerCode extends State<DrawerCode> {
       child: ListView(
         padding: const EdgeInsets.only(top: 20),
         children: [
-          Row(
-            children: <Widget>[
-              Flexible(
-                child: Container(
-                  width: 70,
-                  height: 70,
-                  padding: const EdgeInsets.only(bottom: 0),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(40),
-                    // Set your desired border radius
-                    child: Image.asset(
-                      'assets/Logo/ArogyaSair.png',
-                    ),
-                  ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Row(
+              children: <Widget>[
+                CircleAvatar(
+                  radius: 30,
+                  backgroundColor: Colors.blueAccent,
+                  backgroundImage: profileImagePath != null
+                      ? (profileImagePath!.startsWith('http')
+                      ? NetworkImage(profileImagePath!)
+                      : FileImage(File(profileImagePath!)) as ImageProvider)
+                      : null,
+                  child: profileImagePath == null
+                      ? Text(
+                    username.isNotEmpty ? username[0].toUpperCase() : '',
+                    style: const TextStyle(
+                        color: Colors.black, fontWeight: FontWeight.bold, fontSize: 24),
+                  )
+                      : null,
                 ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Align(
-                  alignment: Alignment.centerLeft,
+                const SizedBox(width: 12),
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(
-                        username,
-                        style: const TextStyle(
-                          fontSize: 12.0,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black,
-                        ),
-                      ),
-                      Text(
-                        email,
-                        style: const TextStyle(
-                          fontSize: 12.0,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xff12d3c6),
-                        ),
-                      ),
+                      Text(username,
+                          style: const TextStyle(
+                              fontSize: 14.0, fontWeight: FontWeight.bold, color: Colors.black)),
+                      Text(email,
+                          style: const TextStyle(
+                              fontSize: 12.0, fontWeight: FontWeight.normal, color: Colors.black)),
                     ],
                   ),
                 ),
-              ),
-            ],
-          ),
-          const Divider(
-            thickness: 5,
-            color: Color(0xFFE0E3E7),
-          ),
-          ListTile(
-            leading: const Icon(
-              Icons.account_circle_outlined,
-              color: Colors.black,
+              ],
             ),
+          ),
+          const Divider(thickness: 5, color: Color(0xFFE0E3E7)),
+          ListTile(
+            leading: const Icon(Icons.account_circle_outlined, color: Colors.black),
             title: const Text("My Account"),
             onTap: () {
               Navigator.pop(context);
-              Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => MyProfile(username, email)));
+              Navigator.push(context,
+                  MaterialPageRoute(builder: (context) => MyProfile(username, email)));
             },
           ),
           ListTile(
-            leading: const FaIcon(
-              FontAwesomeIcons.suitcaseMedical,
-              color: Colors.black,
-            ),
+            leading: const Icon(Icons.room_service_outlined, color: Colors.black),
             title: const Text("Services"),
             onTap: () {
               Navigator.push(context,
@@ -133,11 +115,8 @@ class _DrawerCode extends State<DrawerCode> {
             },
           ),
           ListTile(
-            leading: const Icon(
-              Icons.info,
-              color: Colors.black,
-            ),
-            title: const Text("About us"),
+            leading: const Icon(Icons.question_answer_outlined, color: Colors.black),
+            title: const Text("My Queries"),
             onTap: () {
               Navigator.pop(context);
               Navigator.push(context,
@@ -146,24 +125,24 @@ class _DrawerCode extends State<DrawerCode> {
           ),
           ListTile(
             leading: const Icon(
-              Icons.email,
+              Icons.email_outlined,
               color: Colors.black,
             ),
             title: const Text("Contact us"),
             onTap: () {
-              // Navigator.pop(context);
-              // Navigator.push(
-              //     context,
-              //     MaterialPageRoute(
-              //         builder: (context) => ContactUs(
-              //           userFirstName: userFirstName,
-              //           userLastName: userLastName,
-              //         )));
+              Navigator.pop(context);
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => ContactUs(
+                        userFirstName: userFirstName,
+                        userLastName: userLastName,
+                      )));
             },
           ),
           ListTile(
             leading: const Icon(
-              Icons.privacy_tip,
+              Icons.privacy_tip_outlined,
               color: Colors.black,
             ),
             title: const Text("Privacy Policy"),
@@ -175,15 +154,9 @@ class _DrawerCode extends State<DrawerCode> {
               //         builder: (context) => const UserPrivacyPolicy()));
             },
           ),
-          const Divider(
-            thickness: 5,
-            color: Color(0xFFE0E3E7),
-          ),
+          const Divider(thickness: 5, color: Color(0xFFE0E3E7)),
           ListTile(
-            leading: const Icon(
-              Icons.logout_outlined,
-              color: Colors.black,
-            ),
+            leading: const Icon(Icons.logout_outlined, color: Colors.black),
             title: const Text("Log out"),
             onTap: () async {
               SharedPreferences prefs = await SharedPreferences.getInstance();

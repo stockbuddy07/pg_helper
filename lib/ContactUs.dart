@@ -1,9 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-class ContactUs extends StatelessWidget {
-  const ContactUs({super.key});
+class ContactUs extends StatefulWidget {
+  final String userFirstName;
+  final String userLastName;
 
+  const ContactUs({
+    Key? key,
+    required this.userFirstName,
+    required this.userLastName,
+  }) : super(key: key);
+
+  @override
+  State<ContactUs> createState() => _ContactUsState();
+}
+
+
+class _ContactUsState extends State<ContactUs> {
   final String phoneNumber = '+911010101010';
   final String emailAddress = 'support@staymate.com';
 
@@ -19,7 +32,7 @@ class ContactUs extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Contact Us'),
-        backgroundColor: Colors.teal,
+        backgroundColor: Colors.blueAccent,
       ),
       body: Center(
         child: Padding(
@@ -27,7 +40,7 @@ class ContactUs extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.support_agent, size: 80, color: Colors.teal.shade400),
+              Icon(Icons.support_agent, size: 80, color: Colors.blueAccent),
               const SizedBox(height: 24),
               const Text(
                 'Need Help?\nWe\'re just a message away!',
@@ -41,7 +54,7 @@ class ContactUs extends StatelessWidget {
                 onTap: () => _copyToClipboard(context, "Email", emailAddress),
                 child: Row(
                   children: [
-                    const Icon(Icons.email, color: Colors.teal),
+                    const Icon(Icons.email, color: Colors.blueAccent),
                     const SizedBox(width: 12),
                     Text(emailAddress,
                         style: const TextStyle(
@@ -57,7 +70,7 @@ class ContactUs extends StatelessWidget {
                 onTap: () => _copyToClipboard(context, "Phone number", phoneNumber),
                 child: Row(
                   children: [
-                    const Icon(Icons.phone, color: Colors.teal),
+                    const Icon(Icons.phone, color: Colors.blueAccent),
                     const SizedBox(width: 12),
                     Text(phoneNumber,
                         style: const TextStyle(

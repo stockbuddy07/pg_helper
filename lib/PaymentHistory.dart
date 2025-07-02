@@ -1,6 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
+import 'drawerSideNavigation.dart';
+
 class UpiPaymentPage extends StatefulWidget {
   const UpiPaymentPage({super.key});
 
@@ -17,9 +19,13 @@ class _UpiPaymentPageState extends State<UpiPaymentPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Pay via UPI'),
-        backgroundColor: Colors.deepPurple,
+
+        title: Text('Pay via UPI', style: TextStyle(
+            color: Colors.black, fontWeight: FontWeight.w600, fontSize: 20),),
+        backgroundColor: Colors.transparent,
+        iconTheme: const IconThemeData(color: Colors.blueAccent),
       ),
+      endDrawer: const DrawerCode(),
       body: Padding(
         padding: const EdgeInsets.all(24.0),
         child: Center(
