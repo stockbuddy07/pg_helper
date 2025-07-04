@@ -8,11 +8,8 @@ import 'drawerSideNavigation.dart';
 import 'firebase_api.dart';
 import 'models/MealsModel.dart';
 import 'HelpDesk.dart';
-
-
-
-// imports remain unchanged
-// imports remain unchanged
+import 'RoomInfoPage.dart';
+import 'RoommatesInfoPage.dart';   // ✅ NEW import
 
 class HomePage extends StatefulWidget {
   final String firstname;
@@ -23,7 +20,8 @@ class HomePage extends StatefulWidget {
   _HomePageState createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin {
+class _HomePageState extends State<HomePage>
+    with SingleTickerProviderStateMixin {
   final key = 'username';
   late String userKey;
   late String data;
@@ -39,8 +37,9 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
   String dinner = '';
 
   final List<_DashboardItem> _features = [
-    _DashboardItem(" Room Info", Icons.meeting_room, Colors.blue),
-    _DashboardItem(" Roommates Info", Icons.people, Colors.teal),
+    _DashboardItem("Room Info", Icons.meeting_room, Colors.blue),
+    _DashboardItem("Roommates Info", Icons.people, Colors.teal),
+    // _DashboardItem("Raise a Query", Icons.help_center, Colors.orange),
   ];
 
   @override
@@ -49,7 +48,8 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     _messagingService.init(context);
     _loadUserData();
     _loadTodayMeals();
-    _controller = AnimationController(duration: const Duration(milliseconds: 800), vsync: this);
+    _controller =
+        AnimationController(duration: const Duration(milliseconds: 800), vsync: this);
     _animation = CurvedAnimation(parent: _controller, curve: Curves.easeOutBack);
     _controller.forward();
   }
@@ -58,32 +58,32 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     String? userkey = await getKey();
     String? userData = await getData(key);
     setState(() {
-      data = userData!;
-      userKey = userkey!;
+      data = userData ?? '';
+      userKey = userkey ?? '';
     });
 
     var fcmToken = await _fcm.getToken();
     final updatedData = {"UserFCMToken": fcmToken};
-    final userRef = FirebaseDatabase.instance.ref().child("PG_helper/tblUser").child(userKey);
+    final userRef =
+    FirebaseDatabase.instance.ref().child("PG_helper/tblUser/$userKey");
     await userRef.update(updatedData);
   }
 
   Future<void> _loadTodayMeals() async {
-    String todayDate = DateFormat('yyyy-MM-dd').format(DateTime.now());
-    DatabaseReference dbRef = FirebaseDatabase.instance.ref().child('PG_helper/tblDailyMeals');
+    final todayDate = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    final dbRef =
+    FirebaseDatabase.instance.ref().child('PG_helper/tblDailyMeals');
 
-    DatabaseEvent event = await dbRef.once();
+    final event = await dbRef.once();
     if (event.snapshot.value == null) return;
 
-    Map<dynamic, dynamic> map = event.snapshot.value as Map<dynamic, dynamic>;
-    List<MealData> mealsList = [];
-    map.forEach((key, value) {
-      mealsList.add(MealData.fromMap(value, key));
-    });
+    final map = event.snapshot.value as Map<dynamic, dynamic>;
+    final mealsList = map.entries
+        .map((e) => MealData.fromMap(e.value, e.key))
+        .where((meal) => meal.date == todayDate)
+        .toList();
 
-    final filteredMeals = mealsList.where((meal) => meal.date == todayDate).toList();
-
-    for (var meal in filteredMeals) {
+    for (var meal in mealsList) {
       setState(() {
         breakfast = meal.breakfast;
         lunch = meal.lunch;
@@ -92,23 +92,49 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     }
   }
 
+  /// Dashboard card
   Widget _buildAnimatedCard(int index) {
     final item = _features[index];
     return ScaleTransition(
       scale: _animation,
       child: InkWell(
         onTap: () {
-          if (item.label.trim() == "Raise a Query") {
-            Navigator.push(context, MaterialPageRoute(builder: (context) => const MyHelpDesk()));
-          } else {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${item.label} tapped')));
+          switch (item.label) {
+            case "Room Info":
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => RoomInfoPage(firstname: widget.firstname),
+                ),
+              );
+              break;
+            case "Roommates Info":
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) =>
+                      RoommatesInfoPage(firstname: widget.firstname), // ✅ pass firstname
+                ),
+              );
+              break;
+            case "Raise a Query":
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const MyHelpDesk()),
+              );
+              break;
+            default:
+              break;
           }
         },
         borderRadius: BorderRadius.circular(20),
         child: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [item.color.withOpacity(0.9), item.color.withOpacity(0.6)],
+              colors: [
+                item.color.withOpacity(0.9),
+                item.color.withOpacity(0.6),
+              ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -130,7 +156,11 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
               Text(
                 item.label,
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white),
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
               ),
             ],
           ),
@@ -139,6 +169,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     );
   }
 
+  /// Meal card
   Widget _buildMealCard(String title, String value, IconData icon) {
     return Expanded(
       child: Container(
@@ -147,7 +178,13 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
-          boxShadow: [BoxShadow(color: Colors.grey.shade300, blurRadius: 6, offset: const Offset(2, 3))],
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.shade300,
+              blurRadius: 6,
+              offset: const Offset(2, 3),
+            )
+          ],
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -156,7 +193,8 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
             const SizedBox(height: 8),
             Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 4),
-            Text(value.isNotEmpty ? value : "Not Available", textAlign: TextAlign.center),
+            Text(value.isNotEmpty ? value : "Not Available",
+                textAlign: TextAlign.center),
           ],
         ),
       ),
@@ -173,10 +211,21 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("Welcome",
-                style: TextStyle(fontSize: 12, color: Colors.grey.shade800, fontWeight: FontWeight.bold)),
-            Text(widget.firstname,
-                style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+            Text(
+              "Welcome",
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey.shade800,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            Text(
+              widget.firstname,
+              style: const TextStyle(
+                color: Colors.black,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ],
         ),
         iconTheme: const IconThemeData(color: Colors.blueAccent),
@@ -186,11 +235,15 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
         child: Column(
           children: [
             const SizedBox(height: 12),
+            /// Meal section
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
               child: Align(
                 alignment: Alignment.centerLeft,
-                child: Text("🍽️ Today's Meals", style: Theme.of(context).textTheme.titleMedium),
+                child: Text(
+                  "🍽️ Today's Meals",
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
               ),
             ),
             Padding(
@@ -204,6 +257,8 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
               ),
             ),
             const SizedBox(height: 20),
+
+            /// Dashboard grid
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12),
               child: GridView.builder(
@@ -219,19 +274,25 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                 itemBuilder: (context, index) => _buildAnimatedCard(index),
               ),
             ),
+
+            /// Rules
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 25, vertical: 16),
               child: Align(
                 alignment: Alignment.centerLeft,
-                child: Text("📌 PG Rules & Regulations:",
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                child: Text(
+                  "📌 PG Rules & Regulations:",
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
               ),
             ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12),
               child: Card(
                 elevation: 6,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
                 child: const Padding(
                   padding: EdgeInsets.all(16),
                   child: Column(
@@ -261,6 +322,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
   }
 }
 
+/// Dashboard item model
 class _DashboardItem {
   final String label;
   final IconData icon;
@@ -268,4 +330,3 @@ class _DashboardItem {
 
   _DashboardItem(this.label, this.icon, this.color);
 }
-

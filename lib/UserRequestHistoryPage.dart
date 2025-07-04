@@ -1,3 +1,4 @@
+//user portal room info page
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'models/RegisterRetrieveModel.dart';
@@ -28,7 +29,8 @@ class _RequestHistoryPageState extends State<RequestHistoryPage> {
 
       if (data != null) {
         data.forEach((key, value) {
-          RegisterRetrieveModel user = RegisterRetrieveModel.fromJson(value, key);
+          RegisterRetrieveModel user =
+          RegisterRetrieveModel.fromJson(value, key);
           if (user.status == "Verified" || user.status == "allocated") {
             historyList.add(user);
           }
@@ -39,6 +41,21 @@ class _RequestHistoryPageState extends State<RequestHistoryPage> {
         historyUsers = historyList;
       });
     });
+  }
+
+  void verifyUser(String userKey) async {
+    final userRef = tblUserRef.child(userKey);
+
+    try {
+      await userRef.update({'status': 'Verified'});
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('User status updated to Verified')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error updating user: $e')),
+      );
+    }
   }
 
   @override
@@ -59,7 +76,8 @@ class _RequestHistoryPageState extends State<RequestHistoryPage> {
           final user = historyUsers[index];
           return Card(
             margin: const EdgeInsets.symmetric(vertical: 8),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16)),
             elevation: 4,
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -70,12 +88,25 @@ class _RequestHistoryPageState extends State<RequestHistoryPage> {
                       style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.teal[200] : Colors.teal[700])),
+                          color: isDark
+                              ? Colors.teal[200]
+                              : Colors.teal[700])),
                   const SizedBox(height: 8),
                   _infoRow("Username", user.username ?? ''),
                   _infoRow("Email", user.email ?? ''),
                   _infoRow("Contact", user.contact ?? ''),
                   _infoRow("Bed Status", user.status ?? ''),
+                  const SizedBox(height: 8),
+                  if (user.status != "Verified")
+                    ElevatedButton(
+                      onPressed: () => verifyUser(user.key!),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.teal,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                      ),
+                      child: const Text("Verify User"),
+                    ),
                 ],
               ),
             ),
@@ -90,7 +121,9 @@ class _RequestHistoryPageState extends State<RequestHistoryPage> {
       padding: const EdgeInsets.only(bottom: 4),
       child: Row(
         children: [
-          Text("$title: ", style: const TextStyle(fontWeight: FontWeight.w600, color: Colors.grey)),
+          Text("$title: ",
+              style:
+              const TextStyle(fontWeight: FontWeight.w600, color: Colors.grey)),
           Expanded(child: Text(value, style: const TextStyle(fontSize: 15))),
         ],
       ),
