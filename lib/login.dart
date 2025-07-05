@@ -209,7 +209,7 @@ class _LoginState extends State<Login> {
           }
 
           // Verified User Login
-          if (user["Status"] == "Verified"||user["Status"] == "allocated") {
+          if (user["Status"] == "Verified") {
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(builder: (context) => const BottomBar()),

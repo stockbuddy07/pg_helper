@@ -6,7 +6,8 @@ class RegisterRetrieveModel {
   String email;
   String DOB;
   String contact;
-  String status;
+  String status;       // Still used for "verified"/"unverified"
+  String? bedStatus;   // NEW FIELD: "allocated" / "unallocated"
   String? key;
 
   RegisterRetrieveModel({
@@ -18,6 +19,7 @@ class RegisterRetrieveModel {
     required this.DOB,
     required this.contact,
     required this.status,
+    this.bedStatus,
     this.key,
   });
 
@@ -31,6 +33,7 @@ class RegisterRetrieveModel {
       DOB: json['DOB'] ?? '',
       contact: json['ContactNumber'] ?? '',
       status: json['Status'] ?? '',
+      bedStatus: json['BedStatus'],  // can be null initially
       key: key,
     );
   }

@@ -1,10 +1,10 @@
+// All other imports stay the same
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import '../models/RegisterRetrieveModel.dart';
 
 class RoomDetailPage extends StatefulWidget {
   final String roomId;
-
   RoomDetailPage({required this.roomId});
 
   @override
@@ -12,12 +12,9 @@ class RoomDetailPage extends StatefulWidget {
 }
 
 class _RoomDetailPageState extends State<RoomDetailPage> {
-  final DatabaseReference _roomRef = FirebaseDatabase.instance.ref().child(
-      'PG_helper/tblRooms');
-  final DatabaseReference _bedRef = FirebaseDatabase.instance.ref().child(
-      'PG_helper/tblBeds');
-  final DatabaseReference _userRef = FirebaseDatabase.instance.ref().child(
-      'PG_helper/tblUser');
+  final DatabaseReference _roomRef = FirebaseDatabase.instance.ref().child('PG_helper/tblRooms');
+  final DatabaseReference _bedRef = FirebaseDatabase.instance.ref().child('PG_helper/tblBeds');
+  final DatabaseReference _userRef = FirebaseDatabase.instance.ref().child('PG_helper/tblUser');
 
   Map<dynamic, dynamic>? roomData;
   bool isLoading = true;
@@ -59,8 +56,7 @@ class _RoomDetailPageState extends State<RoomDetailPage> {
         if (status == 'not_available') notAvailableCount++;
 
         if (bedData['roomNumber'] != roomNumber) {
-          await _bedRef.child('${widget.roomId}/$bedId').update(
-              {'roomNumber': roomNumber});
+          await _bedRef.child('${widget.roomId}/$bedId').update({'roomNumber': roomNumber});
         }
       }
     } else {
@@ -74,11 +70,9 @@ class _RoomDetailPageState extends State<RoomDetailPage> {
       }
     }
 
-    if (notAvailableCount == sharingCount && sharingCount > 0) {
-      roomColor = Colors.red.shade300;
-    } else {
-      roomColor = Colors.green.shade300;
-    }
+    roomColor = (notAvailableCount == sharingCount && sharingCount > 0)
+        ? Colors.red.shade300
+        : Colors.green.shade300;
 
     setState(() {
       isLoading = false;
@@ -98,67 +92,61 @@ class _RoomDetailPageState extends State<RoomDetailPage> {
 
         showDialog(
           context: context,
-          builder: (_) =>
-              AlertDialog(
-                title: Text('Bed Unavailable'),
-                content: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Full Name: $fullname'),
-                    SizedBox(height: 8),
-                    Text('Contact: $contact'),
-                  ],
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () async {
-                      // ✅ Deallocate
-                      await _bedRef.child('${widget.roomId}/$bedId').update({
-                        'status': 'available',
-                        'fullname': null,
-                        'contact': null,
-                      });
+          builder: (_) => AlertDialog(
+            title: Text('Bed Unavailable'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Full Name: $fullname'),
+                SizedBox(height: 8),
+                Text('Contact: $contact'),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () async {
+                  await _bedRef.child('${widget.roomId}/$bedId').update({
+                    'status': 'available',
+                    'fullname': null,
+                    'contact': null,
+                  });
 
-                      // Update user status
-                      final usersSnapshot = await _userRef.get();
-                      if (usersSnapshot.exists) {
-                        final usersMap = usersSnapshot.value as Map<
-                            dynamic,
-                            dynamic>;
-                        for (var entry in usersMap.entries) {
-                          final user = RegisterRetrieveModel.fromJson(
-                              entry.value, entry.key);
-                          if (user.contact == contact) {
-                            await _userRef.child(user.key!).update({
-                              'Status': 'unallocated',
-                              'RoomNumber': null,
-                              'Sharing': null,
-                              'BedNumber': null,
-                            });
-                            break;
-                          }
-                        }
+                  final usersSnapshot = await _userRef.get();
+                  if (usersSnapshot.exists) {
+                    final usersMap = usersSnapshot.value as Map<dynamic, dynamic>;
+                    for (var entry in usersMap.entries) {
+                      final user = RegisterRetrieveModel.fromJson(entry.value, entry.key);
+                      if (user.contact == contact) {
+                        await _userRef.child(user.key!).update({
+                          'BedStatus': 'unallocated',
+                          'RoomNumber': null,
+                          'Sharing': null,
+                          'BedNumber': null,
+                        });
+                        break;
                       }
+                    }
+                  }
 
-                      Navigator.pop(context);
-                      setState(() {
-                        bedStatuses[bedId] = 'available';
-                        _updateRoomColor();
-                      });
+                  Navigator.pop(context);
+                  setState(() {
+                    bedStatuses[bedId] = 'available';
+                    _updateRoomColor();
+                  });
 
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Bed deallocated successfully')),
-                      );
-                    },
-                    child: Text('Deallocate'),
-                  ),
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: Text('Close'),
-                  ),
-                ],
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Bed deallocated successfully')),
+                  );
+                },
+                child: Text('Deallocate'),
               ),
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text('Close'),
+              ),
+            ],
+          ),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -192,14 +180,13 @@ class _RoomDetailPageState extends State<RoomDetailPage> {
       return;
     }
 
-    if (matchedUser.status == 'allocated') {
+    if (matchedUser.bedStatus == 'allocated') {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('User already allocated BED.')),
       );
       return;
     }
 
-    // ✅ Show user info confirmation
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -221,9 +208,9 @@ class _RoomDetailPageState extends State<RoomDetailPage> {
         ],
       ),
     ) ?? false;
+
     if (!confirm) return;
 
-// ✅ Allocation logic after dialog is closed
     String fullName = '${matchedUser.name} ${matchedUser.Lastname}';
     await _bedRef.child('${widget.roomId}/$bedId').update({
       'status': 'not_available',
@@ -232,7 +219,7 @@ class _RoomDetailPageState extends State<RoomDetailPage> {
     });
 
     await _userRef.child(matchedUser.key!).update({
-      'Status': 'allocated',
+      'BedStatus': 'allocated',
       'RoomNumber': roomNumber,
       'Sharing': sharingCount.toString(),
       'BedNumber': bedId,
@@ -253,7 +240,7 @@ class _RoomDetailPageState extends State<RoomDetailPage> {
     return await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Enter Phone Number to Allocate BED '),
+        title: Text('Enter Phone Number to Allocate BED'),
         content: TextField(
           keyboardType: TextInputType.phone,
           onChanged: (val) => phone = val,
@@ -266,7 +253,6 @@ class _RoomDetailPageState extends State<RoomDetailPage> {
       ),
     );
   }
-
 
   void _updateRoomColor() {
     final notAvailable = bedStatuses.values.where((s) => s == 'not_available').length;
@@ -317,9 +303,7 @@ class _RoomDetailPageState extends State<RoomDetailPage> {
                     onTap: () => _onBedTap(bedId),
                     child: Card(
                       elevation: 6,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       color: isAvailable ? Colors.green.shade100 : Colors.red.shade100,
                       child: Center(
                         child: Column(
