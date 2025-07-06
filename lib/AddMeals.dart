@@ -123,10 +123,7 @@ class _AddDailyMealState extends State<AddDailyMeal> {
                 validator: (value) =>
                 value == null || value.isEmpty ? 'Enter dinner' : null,
               ),
-              buildTextField(
-                label: 'Snacks (Optional)',
-                controller: snacksController,
-              ),
+
               const SizedBox(height: 10),
               SizedBox(
                 width: double.infinity,

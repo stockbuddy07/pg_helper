@@ -1,18 +1,12 @@
-
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:pg_helper/room_issue.dart';
 import 'package:pg_helper/saveSharePreferences.dart';
-
-import 'BottomNavigation.dart';
 import 'drawerSideNavigation.dart';
 import 'electricity_issue.dart';
 import 'food_issue.dart';
 import 'internet_issue.dart';
-import 'models/userAskQuestion.dart';
-
-
 
 class MyHelpDesk extends StatefulWidget {
   const MyHelpDesk({super.key});
@@ -53,6 +47,10 @@ class _MyHelpDeskState extends State<MyHelpDesk> {
               color: Colors.black, fontWeight: FontWeight.w600, fontSize: 20),
         ),
         iconTheme: const IconThemeData(color: Colors.blueAccent),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.blueAccent),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
       endDrawer: const DrawerCode(),
       body: Container(
@@ -96,7 +94,7 @@ class _MyHelpDeskState extends State<MyHelpDesk> {
                 mainAxisSpacing: 10,
                 childAspectRatio: 1, // square
                 children: [
-                  _issueCardBox(context, 'Electricity', Icons.electrical_services),
+                  _issueCardBox(context, 'Electricity', Icons.electrical_services,),
                   _issueCardBox(context, 'Room', Icons.meeting_room),
                   _issueCardBox(context, 'Food', Icons.restaurant),
                   _issueCardBox(context, 'Internet', Icons.wifi),
@@ -159,5 +157,4 @@ class _MyHelpDeskState extends State<MyHelpDesk> {
       ),
     );
   }
-
 }

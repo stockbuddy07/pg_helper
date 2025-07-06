@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:pg_helper/login.dart';
+import 'package:pg_helper/privacy_policy.dart';
 import 'package:pg_helper/profilePage.dart';
 import 'package:pg_helper/queries.dart';
 import 'package:pg_helper/saveSharePreferences.dart';
@@ -147,11 +148,11 @@ class _DrawerCode extends State<DrawerCode> {
             ),
             title: const Text("Privacy Policy"),
             onTap: () {
-              // // Navigator.pop(context);
-              // Navigator.push(
-              //     context,
-              //     MaterialPageRoute(
-              //         builder: (context) => const UserPrivacyPolicy()));
+              // Navigator.pop(context);
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const PrivacyPolicyWithConsent()));
             },
           ),
           const Divider(thickness: 5, color: Color(0xFFE0E3E7)),

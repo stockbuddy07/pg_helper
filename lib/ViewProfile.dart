@@ -1,5 +1,7 @@
 // ignore_for_file: file_names, use_build_context_synchronously
 
+import 'dart:async';
+
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:pg_helper/saveSharePreferences.dart';
@@ -25,11 +27,23 @@ class _ViewProfileState extends State<ViewProfile> {
   late String selectedGender = '';
   late String userKey;
   bool isLoading = true;
+  late Timer _refreshTimer; // Timer for auto-refresh
 
   @override
   void initState() {
     super.initState();
     _loadUserData();
+    // Start the refresh timer
+    _refreshTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
+      _loadUserData();
+    });
+  }
+
+  @override
+  void dispose() {
+    // Cancel the timer when the widget is disposed
+    _refreshTimer.cancel();
+    super.dispose();
   }
 
   Future<void> _loadUserData() async {
@@ -52,13 +66,17 @@ class _ViewProfileState extends State<ViewProfile> {
     for (final x in snapshot.snapshot.children) {
       final data = x.value as Map;
 
-      controllerUsername = (data["Username"] ?? "").toString();
-      controllerName = (data["FirstName"]+data["LastName"] ?? "").toString();
-      controllerEmail = (data["Email"] ?? "").toString();
-      controllerContact = (data["Contact"] ?? "").toString();
-      controllerDOB = (data["DOB"] ?? "").toString();
-      controllerBloodGroup = (data["BloodGroup"] ?? "").toString();
-      selectedGender = (data["Gender"] ?? "").toString();
+      if (mounted) {
+        setState(() {
+          controllerUsername = (data["Username"] ?? "").toString();
+          controllerName = ((data["FirstName"] ?? "") + " " + (data["LastName"] ?? "")).toString();
+          controllerEmail = (data["Email"] ?? "").toString();
+          controllerContact = (data["ContactNumber"] ?? "").toString();
+          controllerDOB = (data["DOB"] ?? "").toString();
+          controllerBloodGroup = (data["BloodGroup"] ?? "").toString();
+          selectedGender = (data["Gender"] ?? "").toString();
+        });
+      }
     }
 
     if (mounted) {
@@ -138,7 +156,7 @@ class _ViewProfileState extends State<ViewProfile> {
         return Icons.alternate_email;
       case "Email":
         return Icons.email_outlined;
-      case "Contact":
+      case "ContactNumber":
         return Icons.phone_iphone_outlined;
       case "Date of Birth":
         return Icons.calendar_today_outlined;
@@ -176,8 +194,8 @@ class _ViewProfileState extends State<ViewProfile> {
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.edit,
-                  color: Colors.blueAccent,
-                  size: 20,
+                color: Colors.blueAccent,
+                size: 20,
               ),
             ),
             onPressed: () => Navigator.push(

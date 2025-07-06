@@ -88,6 +88,7 @@ class _RoomDetailPageState extends State<RoomDetailPage> {
       if (bedSnapshot.exists) {
         final bedData = bedSnapshot.value as Map<dynamic, dynamic>;
         String fullname = bedData['fullname'] ?? 'Unknown';
+        String username = bedData['username'] ?? 'Unknown';
         String contact = bedData['contact'] ?? 'Unknown';
 
         showDialog(
@@ -100,7 +101,8 @@ class _RoomDetailPageState extends State<RoomDetailPage> {
               children: [
                 Text('Full Name: $fullname'),
                 SizedBox(height: 8),
-                Text('Contact: $contact'),
+                Text('Username: $username'),
+
               ],
             ),
             actions: [
@@ -109,6 +111,7 @@ class _RoomDetailPageState extends State<RoomDetailPage> {
                   await _bedRef.child('${widget.roomId}/$bedId').update({
                     'status': 'available',
                     'fullname': null,
+                    'username': null,
                     'contact': null,
                   });
 
@@ -117,7 +120,7 @@ class _RoomDetailPageState extends State<RoomDetailPage> {
                     final usersMap = usersSnapshot.value as Map<dynamic, dynamic>;
                     for (var entry in usersMap.entries) {
                       final user = RegisterRetrieveModel.fromJson(entry.value, entry.key);
-                      if (user.contact == contact) {
+                      if (user.username == username) {
                         await _userRef.child(user.key!).update({
                           'BedStatus': 'unallocated',
                           'RoomNumber': null,
@@ -156,9 +159,11 @@ class _RoomDetailPageState extends State<RoomDetailPage> {
       return;
     }
 
+    // Step 1: Ask for phone number
     final phoneNumber = await _showPhoneNumberDialog();
     if (phoneNumber == null) return;
 
+    // Step 2: Find user with that phone number
     final usersSnapshot = await _userRef.get();
     RegisterRetrieveModel? matchedUser;
 
@@ -175,18 +180,19 @@ class _RoomDetailPageState extends State<RoomDetailPage> {
 
     if (matchedUser == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('NOT FOUND ANY USER!!')),
+        SnackBar(content: Text('No user found with this phone number!')),
       );
       return;
     }
 
     if (matchedUser.bedStatus == 'allocated') {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('User already allocated BED.')),
+        SnackBar(content: Text('User already has an allocated bed.')),
       );
       return;
     }
 
+    // Step 3: Show confirmation with user details
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -196,6 +202,8 @@ class _RoomDetailPageState extends State<RoomDetailPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text("Full Name: ${matchedUser?.name} ${matchedUser?.Lastname}"),
+            SizedBox(height: 8),
+            Text("Username: ${matchedUser?.username}"),
             SizedBox(height: 8),
             Text("Contact: ${matchedUser?.contact}"),
             SizedBox(height: 16),
@@ -211,10 +219,12 @@ class _RoomDetailPageState extends State<RoomDetailPage> {
 
     if (!confirm) return;
 
+    // Step 4: Allocate bed using the username
     String fullName = '${matchedUser.name} ${matchedUser.Lastname}';
     await _bedRef.child('${widget.roomId}/$bedId').update({
       'status': 'not_available',
       'fullname': fullName,
+      'username': matchedUser.username,
       'contact': matchedUser.contact,
     });
 
@@ -240,15 +250,18 @@ class _RoomDetailPageState extends State<RoomDetailPage> {
     return await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Enter Phone Number to Allocate BED'),
+        title: Text('Enter Phone Number'),
         content: TextField(
           keyboardType: TextInputType.phone,
           onChanged: (val) => phone = val,
-          decoration: InputDecoration(hintText: 'Phone Number'),
+          decoration: InputDecoration(
+            hintText: 'Phone Number',
+            prefixIcon: Icon(Icons.phone),
+          ),
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context), child: Text('Cancel')),
-          TextButton(onPressed: () => Navigator.pop(context, phone), child: Text('Submit')),
+          TextButton(onPressed: () => Navigator.pop(context, phone), child: Text('Search')),
         ],
       ),
     );

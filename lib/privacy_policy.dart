@@ -40,7 +40,7 @@ class _PrivacyPolicyWithConsentState extends State<PrivacyPolicyWithConsent> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Privacy Policy'),
-        backgroundColor: Colors.teal,
+        backgroundColor: Colors.blue,
       ),
       body: Padding(
         padding: const EdgeInsets.all(20),
@@ -100,7 +100,7 @@ class _PrivacyPolicyWithConsentState extends State<PrivacyPolicyWithConsent> {
               icon: const Icon(Icons.picture_as_pdf, color: Colors.teal),
               label: const Text(
                 'View Full Privacy Policy (PDF)',
-                style: TextStyle(color: Colors.teal),
+                style: TextStyle(color: Colors.blue),
               ),
             ),
             const SizedBox(height: 10),
@@ -109,7 +109,7 @@ class _PrivacyPolicyWithConsentState extends State<PrivacyPolicyWithConsent> {
               child: ElevatedButton(
                 onPressed: _onContinue,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.teal,
+                  backgroundColor: Colors.blue,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                 ),
                 child: const Text('Continue'),
