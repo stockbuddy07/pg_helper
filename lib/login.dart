@@ -8,9 +8,9 @@ import 'package:pg_helper/userPassswordChangeUserName.dart';
 import 'AdminHomePage.dart';
 import 'BottomNavigation.dart';
 
+// ... (imports stay the same)
 class Login extends StatefulWidget {
   const Login({super.key});
-
   @override
   _LoginState createState() => _LoginState();
 }
@@ -35,11 +35,14 @@ class _LoginState extends State<Login> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const SizedBox(height: 20),
-                  const Text('StayMate',
-                      style: TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87)),
+                  const Text(
+                    'StayMate',
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
                   const SizedBox(height: 16),
                   ClipRRect(
                     borderRadius: BorderRadius.circular(12),
@@ -50,11 +53,14 @@ class _LoginState extends State<Login> {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  const Text('Welcome',
-                      style: TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black)),
+                  const Text(
+                    'Welcome',
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                  ),
                   const SizedBox(height: 32),
                   TextFormField(
                     controller: controlleruname,
@@ -169,96 +175,100 @@ class _LoginState extends State<Login> {
     var password = controllerpassword.text.trim();
     var encPassword = encryptString(password);
 
-    Query dbRef = FirebaseDatabase.instance
+    Query dbRef2 = FirebaseDatabase.instance
         .ref()
         .child('PG_helper/tblUser')
         .orderByChild("Username")
         .equalTo(username);
 
-    bool loginSuccess = false;
     String msg = "Invalid Username or Password..! Please check..!!";
+    bool loginSuccess = false;
 
-    await dbRef.once().then((snapshot) async {
-      if (snapshot.snapshot.children.isEmpty) {
-        loginSuccess = false;
-        return;
-      }
+    DataSnapshot snapshot = (await dbRef2.once()).snapshot;
 
-      for (var x in snapshot.snapshot.children) {
-        Map user = x.value as Map;
+    if (snapshot.exists) {
+      for (var x in snapshot.children) {
         String? key = x.key;
+        Map<dynamic, dynamic>? data = x.value as Map?;
 
-        if (user["Username"] == username &&
-            user["Password"].toString() == encPassword) {
+        if (data == null) continue;
+
+        String dbUsername = data["Username"]?.toString().trim() ?? "";
+        String dbPassword = data["Password"]?.toString().trim() ?? "";
+        String status = data["Status"]?.toString().trim().toLowerCase() ?? "";
+        String bedStatus = data["BedStatus"]?.toString().trim().toLowerCase() ?? "";
+        String email = data["Email"]?.toString().trim().toLowerCase() ?? "";
+
+        if (dbUsername == username && dbPassword == encPassword) {
+          // Save data before navigation
+          await saveData('username', dbUsername);
+          await saveData('firstname', data["FirstName"] ?? "");
+          await saveData('lastname', data["LastName"] ?? "");
+          await saveData('email', data["Email"] ?? "");
+          await saveData('status', data["Status"] ?? "");
+          await saveData('key', key ?? "");
+
           loginSuccess = true;
 
-          await saveData('username', user["Username"]);
-          await saveData('firstname', user["FirstName"]);
-          await saveData('lastname', user["LastName"]);
-          await saveData('email', user["Email"]);
-          await saveData('status', user["Status"]);
-          await saveData('key', key);
-
-          // Admin Login
-          if (user["Email"] == "shubham@admin.com") {
+          // Admin check (allow login regardless of status/bedStatus)
+          if (email == "shubham@admin.com") {
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(builder: (context) => const AdminHomePage(0)),
             );
-            return;
           }
 
-          // Verified User Login
-          if (user["Status"] == "Verified") {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => const BottomBar()),
-            );
+          // User check
+          else if (status == "verified") {
+            if (bedStatus.isEmpty) {
+              msg = "Your bed is not allocated yet. Please contact admin.";
+              _showDialog(context, "Contact Admin", msg);
+            } else if (bedStatus == "unallocated") {
+              msg = "Your bed is not allocated yet.";
+              _showDialog(context, "Bed Unallocated", msg);
+            } else {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => const BottomBar()),
+              );
+            }
           } else {
-            // Not verified
-            showDialog(
-              context: context,
-              builder: (context) {
-                return AlertDialog(
-                  title: const Text("Account Not Verified"),
-                  content: const Text("Your account is not verified yet."),
-                  actions: [
-                    OutlinedButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      child: const Text("OK"),
-                    ),
-                  ],
-                );
-              },
-            );
+            msg = "Your account is not verified yet.";
+            _showDialog(context, "Account Not Verified", msg);
           }
 
           break;
         }
       }
-    });
+    }
 
     if (!loginSuccess) {
-      showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            title: const Text("Login Failed"),
-            content: Text(msg),
-            actions: [
-              OutlinedButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text("OK"),
-              )
-            ],
-          );
-        },
-      );
+      _showDialog(context, "Login Failed", msg);
     }
   }
 
-  String encryptString(String input) {
-    var bytes = utf8.encode(input);
+  void _showDialog(BuildContext context, String title, String message) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(title),
+          content: Text(message),
+          actions: <Widget>[
+            OutlinedButton(
+              child: const Text('OK'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            )
+          ],
+        );
+      },
+    );
+  }
+
+  String encryptString(String originalString) {
+    var bytes = utf8.encode(originalString);
     var digest = sha256.convert(bytes);
     return digest.toString();
   }

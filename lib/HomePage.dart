@@ -39,7 +39,7 @@ class _HomePageState extends State<HomePage>
   final List<_DashboardItem> _features = [
     _DashboardItem("Room Info", Icons.meeting_room, Colors.blue),
     _DashboardItem("Roommates Info", Icons.people, Colors.teal),
-    // _DashboardItem("Raise a Query", Icons.help_center, Colors.orange),
+    _DashboardItem("Raise a Query", Icons.help_center, Colors.orange),
   ];
 
   @override
@@ -281,7 +281,7 @@ class _HomePageState extends State<HomePage>
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  "📌 PG Rules & Regulations:",
+                  "📌 PG Rules & Regulations :",
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
               ),
@@ -294,7 +294,7 @@ class _HomePageState extends State<HomePage>
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: const Padding(
-                  padding: EdgeInsets.all(16),
+                  padding: EdgeInsets.all(16  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [

@@ -20,7 +20,7 @@ class _ContactUsState extends State<ContactUs> {
   final String phoneNumber = '+911010101010';
   final String emailAddress = 'support@staymate.com';
 
-  void _copyToClipboard(BuildContext context, String label, String value) {
+    void _copyToClipboard(BuildContext context, String label, String value) {
     Clipboard.setData(ClipboardData(text: value));
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('$label copied to clipboard')),

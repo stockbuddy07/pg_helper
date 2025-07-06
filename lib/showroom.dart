@@ -19,7 +19,7 @@ class showroom extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text("User Details"),
-        backgroundColor: const Color(0xff12d3c6),
+        backgroundColor: const Color(0xD72A8AEA),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),

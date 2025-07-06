@@ -92,7 +92,7 @@ class _AddDailyMealState extends State<AddDailyMeal> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Add Daily Meal'),
-        backgroundColor: const Color(0xff12d3c6),
+        backgroundColor: const Color(0xD72A8AEA),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -134,7 +134,7 @@ class _AddDailyMealState extends State<AddDailyMeal> {
                 child: ElevatedButton(
                   onPressed: submitMeal,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xff12d3c6),
+                    backgroundColor: const Color(0xD72A8AEA),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),
                     ),

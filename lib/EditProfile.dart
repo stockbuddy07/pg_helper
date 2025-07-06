@@ -1,5 +1,3 @@
-// ignore_for_file: file_names, non_constant_identifier_names, depend_on_referenced_packages, prefer_typing_uninitialized_variables, use_build_context_synchronously
-
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_holo_date_picker/date_picker.dart';
@@ -20,6 +18,7 @@ class _EditProfileState extends State<EditProfile> {
   late TextEditingController controllerFirstName;
   late TextEditingController controllerLastName;
   late TextEditingController controllerMail;
+  late TextEditingController controllerContact;
   late TextEditingController controllerDateOfBirth;
   late TextEditingController controllerBloodGroup;
   var birthDate = "Select Birthdate";
@@ -27,6 +26,52 @@ class _EditProfileState extends State<EditProfile> {
   late String username;
   late String userKey;
   late String email;
+  bool isLoading = true;
+
+  // Focus nodes
+  late FocusNode firstNameFocus;
+  late FocusNode lastNameFocus;
+  late FocusNode emailFocus;
+  late FocusNode contactFocus;
+  late FocusNode bloodGroupFocus;
+
+  @override
+  void initState() {
+    super.initState();
+    controllerUsername = TextEditingController();
+    controllerFirstName = TextEditingController();
+    controllerLastName = TextEditingController();
+    controllerMail = TextEditingController();
+    controllerContact = TextEditingController();
+    controllerDateOfBirth = TextEditingController();
+    controllerBloodGroup = TextEditingController();
+
+    firstNameFocus = FocusNode();
+    lastNameFocus = FocusNode();
+    emailFocus = FocusNode();
+    contactFocus = FocusNode();
+    bloodGroupFocus = FocusNode();
+
+    _loadUserData();
+  }
+
+  @override
+  void dispose() {
+    firstNameFocus.dispose();
+    lastNameFocus.dispose();
+    emailFocus.dispose();
+    contactFocus.dispose();
+    bloodGroupFocus.dispose();
+
+    controllerUsername.dispose();
+    controllerFirstName.dispose();
+    controllerLastName.dispose();
+    controllerMail.dispose();
+    controllerContact.dispose();
+    controllerDateOfBirth.dispose();
+    controllerBloodGroup.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -39,131 +84,225 @@ class _EditProfileState extends State<EditProfile> {
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: FutureBuilder(
-        future: _loadUserData(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          return SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-              Row(
-              children: [
-              CircleAvatar(
-              radius: 40,
-                backgroundColor: Colors.blueAccent,
-                child: Text(
-                  username.isNotEmpty ? username[0].toUpperCase() : '',
-                  style: const TextStyle(fontSize: 28, color: Colors.white),
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Profile Header
+              Center(
+                child: Column(
+                  children: [
+                    CircleAvatar(
+                      radius: 40,
+                      backgroundColor: Colors.blueAccent,
+                      child: Text(
+                        username.isNotEmpty ? username[0].toUpperCase() : '',
+                        style: const TextStyle(fontSize: 28, color: Colors.white),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      username,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(width: 16),
-              const Text("User Profile", style: TextStyle(fontSize: 18)),
-              ],
-            ),
+              const SizedBox(height: 24),
 
-                  const SizedBox(height: 20),
-                  TextFormField(
-                    controller: controllerUsername,
-                    enabled: false,
-                    decoration: const InputDecoration(
-                      hintText: "Username",
-                      prefixIcon: Icon(Icons.person, color: Colors.blueAccent),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(15))),
-                    ),
+              // Username Field (always visible label)
+              const Text('Username', style: TextStyle(fontSize: 14, color: Colors.grey)),
+              const SizedBox(height: 4),
+              TextFormField(
+                controller: controllerUsername,
+                enabled: false,
+                decoration: InputDecoration(
+                  filled: true,
+                  fillColor: Colors.grey[200],
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: BorderSide.none,
                   ),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextFormField(
-                          controller: controllerFirstName,
-                          decoration: const InputDecoration(
-                            hintText: "First Name",
-                            prefixIcon: Icon(Icons.person, color: Colors.blueAccent),
-                            border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(15))),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: TextFormField(
-                          controller: controllerLastName,
-                          decoration: const InputDecoration(
-                            hintText: "Last Name",
-                            prefixIcon: Icon(Icons.person, color: Colors.blueAccent),
-                            border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(15))),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  TextFormField(
-                    controller: controllerMail,
-                    keyboardType: TextInputType.emailAddress,
-                    decoration: const InputDecoration(
-                      hintText: "Email",
-                      prefixIcon: Icon(Icons.mail, color: Colors.blueAccent),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(15))),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  const Text('Gender:', style: TextStyle(fontSize: 18)),
-                  Row(
-                    children: ["Male", "Female", "Other"].map((gender) {
-                      return Row(
-                        children: [
-                          Radio<String>(
-                            value: gender,
-                            groupValue: selectedGender,
-                            onChanged: (value) => setState(() => selectedGender = value),
-                          ),
-                          Text(gender, style: const TextStyle(fontSize: 18)),
-                        ],
-                      );
-                    }).toList(),
-                  ),
-                  const SizedBox(height: 10),
-                  TextFormField(
-                    controller: controllerBloodGroup,
-                    decoration: const InputDecoration(
-                      hintText: "Blood Group",
-                      prefixIcon: Icon(Icons.bloodtype, color: Colors.blueAccent),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(15))),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  TextFormField(
-                    controller: controllerDateOfBirth,
-                    readOnly: true,
-                    onTap: () => _getDate(context),
-                    decoration: InputDecoration(
-                      hintText: birthDate,
-                      prefixIcon: const Icon(Icons.date_range, color: Colors.blueAccent),
-                      border: const OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(15))),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  Center(
-                    child: ElevatedButton(
-                      onPressed: () => updateData(userKey, context),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blueAccent,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                      ),
-                      child: const Text("Save Changes", style: TextStyle(color: Colors.white, fontSize: 18)),
-                    ),
-                  )
-                ],
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                ),
               ),
-            ),
-          );
-        },
+              const SizedBox(height: 16),
+
+              // First Name Field
+              if (firstNameFocus.hasFocus)
+                const Text('First Name', style: TextStyle(fontSize: 14, color: Colors.grey)),
+              if (firstNameFocus.hasFocus) const SizedBox(height: 4),
+              TextFormField(
+                controller: controllerFirstName,
+                focusNode: firstNameFocus,
+                decoration: InputDecoration(
+                  hintText: "First Name",
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(color: Colors.grey),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Last Name Field
+              if (lastNameFocus.hasFocus)
+                const Text('Last Name', style: TextStyle(fontSize: 14, color: Colors.grey)),
+              if (lastNameFocus.hasFocus) const SizedBox(height: 4),
+              TextFormField(
+                controller: controllerLastName,
+                focusNode: lastNameFocus,
+                decoration: InputDecoration(
+                  hintText: "Last Name",
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(color: Colors.grey),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Email Field
+              if (emailFocus.hasFocus)
+                const Text('Email', style: TextStyle(fontSize: 14, color: Colors.grey)),
+              if (emailFocus.hasFocus) const SizedBox(height: 4),
+              TextFormField(
+                controller: controllerMail,
+                focusNode: emailFocus,
+                keyboardType: TextInputType.emailAddress,
+                decoration: InputDecoration(
+                  hintText: "Email",
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(color: Colors.grey),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Contact Field
+              if (contactFocus.hasFocus)
+                const Text('Contact Number', style: TextStyle(fontSize: 14, color: Colors.grey)),
+              if (contactFocus.hasFocus) const SizedBox(height: 4),
+              TextFormField(
+                controller: controllerContact,
+                focusNode: contactFocus,
+                keyboardType: TextInputType.phone,
+                decoration: InputDecoration(
+                  hintText: "Enter your phone number",
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(color: Colors.grey),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Gender Field (always visible label)
+              const Text('Gender', style: TextStyle(fontSize: 14, color: Colors.grey)),
+              const SizedBox(height: 4),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: ["Male", "Female", "Other"].map((gender) {
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 20),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Radio<String>(
+                          value: gender,
+                          groupValue: selectedGender,
+                          onChanged: (value) => setState(() => selectedGender = value),
+                        ),
+                        Text(gender),
+                      ],
+                    ),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 16),
+
+              // Blood Group Field
+              if (bloodGroupFocus.hasFocus)
+                const Text('Blood Group', style: TextStyle(fontSize: 14, color: Colors.grey)),
+              if (bloodGroupFocus.hasFocus) const SizedBox(height: 4),
+              TextFormField(
+                controller: controllerBloodGroup,
+                focusNode: bloodGroupFocus,
+                decoration: InputDecoration(
+                  hintText: "Enter your blood group",
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(color: Colors.grey),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Date of Birth Field (always visible label)
+              const Text('Date of Birth', style: TextStyle(fontSize: 14, color: Colors.grey)),
+              const SizedBox(height: 4),
+              TextFormField(
+                controller: controllerDateOfBirth,
+                readOnly: true,
+                onTap: () => _getDate(context),
+                decoration: InputDecoration(
+                  hintText: birthDate,
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(color: Colors.grey),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  suffixIcon: const Icon(Icons.calendar_today),
+                ),
+              ),
+              const SizedBox(height: 32),
+
+              // Save Button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => updateData(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blueAccent,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: const Text(
+                    "SAVE CHANGES",
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -178,65 +317,105 @@ class _EditProfileState extends State<EditProfile> {
       looping: true,
     );
     if (datePicked != null) {
-      birthDate = "${datePicked.day}-${datePicked.month}-${datePicked.year}";
-      setState(() => controllerDateOfBirth = TextEditingController(text: birthDate));
+      setState(() {
+        birthDate = "${datePicked.day}-${datePicked.month}-${datePicked.year}";
+        controllerDateOfBirth.text = birthDate;
+      });
     }
-  }
-
-  @override
-  void dispose() {
-    controllerUsername.dispose();
-    controllerFirstName.dispose();
-    controllerLastName.dispose();
-    controllerMail.dispose();
-    controllerDateOfBirth.dispose();
-    controllerBloodGroup.dispose();
-    super.dispose();
   }
 
   Future<void> _loadUserData() async {
-    String? userData = await getData('username');
-    String? userEmail = await getData('email');
-    String? userkey = await getKey();
+    try {
+      String? userData = await getData('username');
+      String? userEmail = await getData('email');
+      String? userkey = await getKey();
 
-    username = userData!;
-    email = userEmail!;
-    userKey = userkey!;
+      if (userData == null || userEmail == null || userkey == null) {
+        throw Exception("User data not found in shared preferences");
+      }
 
-    Ref = FirebaseDatabase.instance
-        .ref()
-        .child("PG_helper/tblUser")
-        .orderByChild("Username")
-        .equalTo(username);
+      username = userData;
+      email = userEmail;
+      userKey = userkey;
 
-    final documentSnapshot = await Ref.once();
-    for (var x in documentSnapshot.snapshot.children) {
-      data = x.value as Map;
-      controllerUsername = TextEditingController(text: data["Username"]);
-      controllerFirstName = TextEditingController(text: data["FirstName"]);
-      controllerLastName = TextEditingController(text: data["LastName"]);
-      controllerMail = TextEditingController(text: data["Email"]);
-      controllerDateOfBirth = TextEditingController(text: data["DOB"]);
-      controllerBloodGroup = TextEditingController(text: data["BloodGroup"]);
-      selectedGender ??= data["Gender"];
+      Ref = FirebaseDatabase.instance
+          .ref()
+          .child("PG_helper/tblUser")
+          .orderByChild("Username")
+          .equalTo(username);
+
+      final documentSnapshot = await Ref.once();
+      if (documentSnapshot.snapshot.value != null) {
+        for (var x in documentSnapshot.snapshot.children) {
+          data = x.value as Map;
+          setState(() {
+            controllerUsername.text = data["Username"] ?? '';
+            controllerFirstName.text = data["FirstName"] ?? '';
+            controllerLastName.text = data["LastName"] ?? '';
+            controllerMail.text = data["Email"] ?? '';
+            controllerContact.text = data["Contact"] ?? '';
+            controllerDateOfBirth.text = data["DOB"] ?? '';
+            controllerBloodGroup.text = data["BloodGroup"] ?? '';
+            selectedGender = data["Gender"] ?? '';
+            birthDate = data["DOB"] ?? "Select Birthdate";
+          });
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error loading user data: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
     }
   }
 
-  void updateData(String userkey, BuildContext context) async {
-    final updatedData = {
-      "Username": controllerUsername.text,
-      "FirstName": controllerFirstName.text,
-      "LastName": controllerLastName.text,
-      "Email": controllerMail.text,
-      "DOB": controllerDateOfBirth.text,
-      "Gender": selectedGender,
-      "BloodGroup": controllerBloodGroup.text,
-    };
+  void updateData() async {
+    try {
+      if (mounted) {
+        setState(() {
+          isLoading = true;
+        });
+      }
 
-    final userRef = FirebaseDatabase.instance.ref().child("PG_helper/tblUser").child(userkey);
-    await userRef.update(updatedData);
+      final updatedData = {
+        "Username": controllerUsername.text,
+        "FirstName": controllerFirstName.text,
+        "LastName": controllerLastName.text,
+        "Email": controllerMail.text,
+        "Contact": controllerContact.text,
+        "DOB": controllerDateOfBirth.text,
+        "Gender": selectedGender,
+        "BloodGroup": controllerBloodGroup.text,
+      };
 
-    // Go back after saving
-    Navigator.pop(context);
+      final userRef = FirebaseDatabase.instance.ref().child("PG_helper/tblUser").child(userKey);
+      await userRef.update(updatedData);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Profile updated successfully!')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to update profile: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+        Navigator.pop(context);
+      }
+    }
   }
 }

@@ -104,7 +104,7 @@ class _RoomsBySharingPageState extends State<RoomsBySharingPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text("${widget.sharing}-Sharing Rooms"),
-        backgroundColor: const Color(0xff12d3c6),
+        backgroundColor: const Color(0xD72A8AEA),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())

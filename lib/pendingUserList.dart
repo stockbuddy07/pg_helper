@@ -103,7 +103,7 @@ class _PendingUsersPageState extends State<PendingUsersPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Pending User Requests"),
-        backgroundColor: const Color(0xff12d3c6),
+        backgroundColor: const Color(0xD72A8AEA),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(12),

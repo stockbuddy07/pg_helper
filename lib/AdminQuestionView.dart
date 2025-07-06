@@ -1,9 +1,9 @@
+// Imports
 import 'dart:convert';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
-import 'package:pg_helper/saveSharePreferences.dart';
-import 'models/userAskQuestion.dart';
 import 'package:http/http.dart' as http;
+import 'package:pg_helper/saveSharePreferences.dart';
 
 class AdminQuestionView extends StatefulWidget {
   const AdminQuestionView({super.key});
@@ -13,52 +13,17 @@ class AdminQuestionView extends StatefulWidget {
 }
 
 class _AdminQuestionView extends State<AdminQuestionView> {
-  Query dbRef = FirebaseDatabase.instance.ref().child('PG_helper/tblUserQuestions');
+  final Query dbRef =
+  FirebaseDatabase.instance.ref().child('PG_helper/tblUserQuestions');
+  final String key = 'username';
   late String data;
-  final key = 'username';
   late String userKey;
+  final Map<String, Map<String, dynamic>> _userInfoCache = {};
 
   @override
   void initState() {
     super.initState();
     _loadUserData();
-  }
-
-  Future<void> sendNotificationToUser({
-    required String token,
-    required String title,
-    required String body,
-  }) async {
-    const String serverKey = 'YOUR_SERVER_KEY_HERE'; // 🔒 Replace with your actual FCM server key
-    final Uri fcmUrl = Uri.parse('https://fcm.googleapis.com/fcm/send');
-
-    try {
-      final response = await http.post(
-        fcmUrl,
-        headers: <String, String>{
-          'Content-Type': 'application/json',
-          'Authorization': 'key=$serverKey',
-        },
-        body: jsonEncode({
-          'to': token,
-          'notification': {
-            'title': title,
-            'body': body,
-          },
-          'priority': 'high',
-          'data': {
-            'click_action': 'FLUTTER_NOTIFICATION_CLICK',
-            'status': 'done',
-          },
-        }),
-      );
-
-      if (response.statusCode != 200) {
-        debugPrint('FCM Error: ${response.body}');
-      }
-    } catch (e) {
-      debugPrint('FCM Exception: $e');
-    }
   }
 
   Future<void> _loadUserData() async {
@@ -72,90 +37,214 @@ class _AdminQuestionView extends State<AdminQuestionView> {
     }
   }
 
+  Future<Map<String, dynamic>> _getUserInfo(String userId) async {
+    if (_userInfoCache.containsKey(userId)) {
+      return _userInfoCache[userId]!;
+    }
+
+    try {
+      final userRef =
+      FirebaseDatabase.instance.ref().child('PG_helper/tblUser/$userId');
+      final event = await userRef.once();
+      final data = event.snapshot.value;
+
+      if (data != null && data is Map) {
+        final userData =
+        data.map((key, value) => MapEntry(key.toString(), value));
+        _userInfoCache[userId] = userData;
+        return userData;
+      } else {
+        return {};
+      }
+    } catch (e) {
+      debugPrint('❌ Error fetching user data: $e');
+      return {};
+    }
+  }
+
+  Future<void> sendNotificationToUser({
+    required String token,
+    required String title,
+    required String body,
+  }) async {
+    const String serverKey = 'YOUR_SERVER_KEY_HERE';
+    final Uri fcmUrl = Uri.parse('https://fcm.googleapis.com/fcm/send');
+
+    try {
+      final response = await http.post(
+        fcmUrl,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'key=$serverKey',
+        },
+        body: jsonEncode({
+          'to': token,
+          'notification': {'title': title, 'body': body},
+          'priority': 'high',
+          'data': {
+            'click_action': 'FLUTTER_NOTIFICATION_CLICK',
+            'status': 'done'
+          },
+        }),
+      );
+
+      if (response.statusCode != 200) {
+        debugPrint('FCM Error: ${response.body}');
+      }
+    } catch (e) {
+      debugPrint('FCM Exception: $e');
+    }
+  }
+
+  String formatTimestamp(String? timestamp) {
+    if (timestamp == null || timestamp.isEmpty) return 'Unknown time';
+    try {
+      final dateTime = DateTime.parse(timestamp).toLocal();
+      return "${dateTime.day}/${dateTime.month}/${dateTime.year}  ${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}";
+    } catch (e) {
+      return 'Invalid time';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xfff2f6f7),
-      appBar: AppBar(
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
         backgroundColor: const Color(0xfff2f6f7),
-        title: const Text('Admin Question View', style: TextStyle(color: Colors.black)),
-        centerTitle: true,
-        elevation: 0,
-        automaticallyImplyLeading: false,
-        iconTheme: const IconThemeData(color: Color(0xff12d3c6)),
-      ),
-      body: StreamBuilder(
-        stream: dbRef.onValue,
-        builder: (BuildContext context, AsyncSnapshot snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
-            return const Center(child: Text('Error fetching data'));
-          }
-          if (snapshot.hasData && snapshot.data!.snapshot.value != null) {
-            Map<dynamic, dynamic> map = snapshot.data!.snapshot.value as Map;
-            List<MapEntry<String, UserAskQuestionModel>> questionList = [];
+        appBar: AppBar(
+          backgroundColor: const Color(0xD72A8AEA),
+          title: const Text(
+            'Admin Question View',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          ),
+          centerTitle: true,
+          elevation: 0,
+          bottom: const TabBar(
+            indicatorColor: Colors.white,
+            labelColor: Colors.white,
+            unselectedLabelColor: Colors.white70,
+            labelStyle: TextStyle(fontWeight: FontWeight.bold),
+            tabs: [
+              Tab(text: 'Unanswered'),
+              Tab(text: 'History'),
+            ],
+          ),
+        ),
+        body: StreamBuilder(
+          stream: dbRef.onValue,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (snapshot.hasError) {
+              return const Center(child: Text('Error fetching data'));
+            }
+            if (snapshot.hasData && snapshot.data!.snapshot.value != null) {
+              Map dataMap = snapshot.data!.snapshot.value as Map;
+              List<MapEntry<String, Map>> unanswered = [];
+              List<MapEntry<String, Map>> history = [];
 
-            map.forEach((key, value) {
-              final model = UserAskQuestionModel.fromJson(Map<String, dynamic>.from(value));
-              if (model.Status != 'Completed') {
-                questionList.add(MapEntry(key, model));
-              }
-            });
+              dataMap.forEach((key, value) {
+                final questionData = Map<String, dynamic>.from(value);
+                if (questionData['Status'] == 'Completed') {
+                  history.add(MapEntry(key, questionData));
+                } else {
+                  unanswered.add(MapEntry(key, questionData));
+                }
+              });
 
-            return ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: questionList.length,
-              itemBuilder: (context, index) {
-                return _buildQuestionCard(questionList[index]);
-              },
-            );
-          } else {
-            return const Center(child: Text('No questions available'));
-          }
-        },
+              // Sort history by timestamp descending
+              history.sort((a, b) {
+                final aTime =
+                    DateTime.tryParse(a.value['Timestamp'] ?? '') ??
+                        DateTime(0);
+                final bTime =
+                    DateTime.tryParse(b.value['Timestamp'] ?? '') ??
+                        DateTime(0);
+                return bTime.compareTo(aTime);
+              });
+
+              return TabBarView(
+                children: [
+                  _buildListView(unanswered, isHistory: false),
+                  _buildListView(history, isHistory: true),
+                ],
+              );
+            } else {
+              return const Center(child: Text('No questions available'));
+            }
+          },
+        ),
       ),
     );
   }
 
-  Widget _buildQuestionCard(MapEntry<String, UserAskQuestionModel> entry) {
+  Widget _buildListView(List<MapEntry<String, Map>> list,
+      {required bool isHistory}) {
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: list.length,
+      itemBuilder: (context, index) {
+        final questionData = list[index].value;
+        final userId = questionData['UserId'] ?? '';
+        return FutureBuilder<Map<String, dynamic>>(
+          future: _getUserInfo(userId),
+          builder: (context, snapshot) {
+            final user = snapshot.data ?? {};
+            return isHistory
+                ? _buildHistoryCard(list[index], user)
+                : _buildQuestionCard(list[index], user);
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildQuestionCard(MapEntry<String, Map> entry, Map user) {
+    final questionData = entry.value;
     final questionKey = entry.key;
-    final questionModel = entry.value;
     final TextEditingController answerController = TextEditingController();
+    final timestamp = formatTimestamp(questionData['Timestamp']);
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),
       child: Card(
         elevation: 6,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(20),
         ),
+        color: Colors.white,
+        shadowColor: Colors.black12,
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              _buildUserInfo(user, questionData),
+              const SizedBox(height: 12),
               Row(
                 children: [
-                  const Icon(Icons.question_answer, color: Colors.teal),
+                  const Icon(Icons.question_answer, color: Color(0xD72A8AEA)),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      questionModel.Question ?? '',
+                      questionData['Question'] ?? '',
                       style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
+                          fontWeight: FontWeight.w600, fontSize: 16),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
-              const Text(
-                "Answer:",
-                style: TextStyle(fontWeight: FontWeight.bold),
+              const SizedBox(height: 6),
+              Text(
+                'Date: $timestamp',
+                style: const TextStyle(color: Colors.grey),
               ),
+              const SizedBox(height: 16),
+              const Text('Answer:',
+                  style: TextStyle(
+                      fontWeight: FontWeight.bold, color: Colors.black87)),
               const SizedBox(height: 6),
               TextField(
                 controller: answerController,
@@ -163,26 +252,30 @@ class _AdminQuestionView extends State<AdminQuestionView> {
                 decoration: InputDecoration(
                   hintText: 'Type your answer here...',
                   filled: true,
-                  fillColor: Colors.grey.shade100,
+                  fillColor: Colors.white,
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: Colors.teal.shade100),
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide:
+                    const BorderSide(color: Color(0xffe0e0e0), width: 1),
                   ),
+                  contentPadding: const EdgeInsets.all(16),
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
               Align(
-                alignment: Alignment.center,
+                alignment: Alignment.centerRight,
                 child: ElevatedButton.icon(
                   icon: const Icon(Icons.send),
                   label: const Text('Submit Answer'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xff12d3c6),
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
+                    backgroundColor: const Color(0xD72A8AEA),
                     foregroundColor: Colors.white,
+                    elevation: 2,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 24, vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
                   ),
                   onPressed: () async {
                     String answer = answerController.text.trim();
@@ -194,13 +287,7 @@ class _AdminQuestionView extends State<AdminQuestionView> {
                     }
 
                     try {
-                      DatabaseReference userRef = FirebaseDatabase.instance
-                          .ref()
-                          .child('PG_helper/tblUser/${questionModel.UserId}');
-                      DatabaseEvent event = await userRef.once();
-                      Map userData = event.snapshot.value as Map;
-                      String fcmToken = userData['FCMToken'] ?? '';
-
+                      String fcmToken = user['FCMToken'] ?? '';
                       await FirebaseDatabase.instance
                           .ref()
                           .child('PG_helper/tblUserQuestions/$questionKey')
@@ -218,7 +305,8 @@ class _AdminQuestionView extends State<AdminQuestionView> {
                       }
 
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Answer submitted successfully')),
+                        const SnackBar(
+                            content: Text('Answer submitted successfully')),
                       );
 
                       answerController.clear();
@@ -234,6 +322,73 @@ class _AdminQuestionView extends State<AdminQuestionView> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildHistoryCard(MapEntry<String, Map> entry, Map user) {
+    final questionData = entry.value;
+    final timestamp = formatTimestamp(questionData['Timestamp']);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Card(
+        elevation: 6,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        color: Colors.white,
+        shadowColor: Colors.black12,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildUserInfo(user, questionData),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  const Icon(Icons.question_mark, color: Color(0xD72A8AEA)),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      questionData['Question'] ?? '',
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 15),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Date: $timestamp',
+                style: const TextStyle(color: Colors.grey),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                "Answer: ${questionData['Answer'] ?? 'No answer'}",
+                style: const TextStyle(color: Colors.black87),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildUserInfo(Map user, Map questionData) {
+    String name =
+    "${user['FirstName'] ?? ''} ${user['LastName'] ?? ''}".trim();
+    String number = user['ContactNumber'] ?? 'N/A';
+    String room = user['RoomNumber'] ?? 'N/A';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text("Name: ${name.isNotEmpty ? name : 'Unknown'}",
+            style: const TextStyle(fontWeight: FontWeight.bold)),
+        Text("Number: $number"),
+        Text("Room: $room"),
+      ],
     );
   }
 }

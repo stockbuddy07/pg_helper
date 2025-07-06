@@ -6,6 +6,7 @@ import 'package:pg_helper/AddMeals.dart';
 import 'package:pg_helper/login.dart';
 import 'package:pg_helper/pendingUserList.dart';
 import 'package:pg_helper/AdminQuestionView.dart';
+import 'package:pg_helper/students_list_admin_side.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:pg_helper/RoomManagementDashboard.dart';
 
@@ -103,8 +104,11 @@ class _AdminHomePageState extends State<AdminHomePage> {
                 _buildDashboardCard("User Requests", Icons.group, Colors.blueAccent, () {
                   _navigateToPage(PendingUsersPage());
                 }),
-                _buildDashboardCard("Appointments", Icons.event, Colors.blueAccent, () {
+                _buildDashboardCard("Query Zone", Icons.event, Colors.blueAccent, () {
                   _navigateToPage(AdminQuestionView());
+                }),
+                _buildDashboardCard("Students List", Icons.event, Colors.blueAccent, () {
+                  _navigateToPage(StudentsListAdminSide());
                 }),
               ],
             ),

@@ -102,7 +102,7 @@ class _ModifyRoomsPageState extends State<ModifyRoomsPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Modify Rooms'),
-        backgroundColor: const Color(0xff12d3c6),
+        backgroundColor: const Color(0xD72A8AEA),
       ),
       body: _rooms.isEmpty
           ? const Center(child: Text('No rooms found'))

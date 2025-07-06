@@ -65,7 +65,10 @@ class _AddRoomPageState extends State<AddRoomPage> {
 
     if (roomExists) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Room number already used")),
+        SnackBar(
+          content: Text("Room number already used"),
+          backgroundColor: Color(0xD72A8AEA), // Blue color
+        ),
       );
       return;
     }
@@ -82,7 +85,10 @@ class _AddRoomPageState extends State<AddRoomPage> {
     }
 
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Room added successfully")),
+      SnackBar(
+        content: Text("Room added successfully"),
+        backgroundColor: Color(0xD72A8AEA), // Blue color
+      ),
     );
 
     _roomController.clear();
@@ -102,7 +108,12 @@ class _AddRoomPageState extends State<AddRoomPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Add Room"), backgroundColor: Color(0xff12d3c6)),
+      backgroundColor: Colors.white, // White background
+      appBar: AppBar(
+        title: Text("Add Room", style: TextStyle(color: Colors.white)),
+        backgroundColor: Color(0xD72A8AEA), // Blue app bar
+        elevation: 0,
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -114,27 +125,65 @@ class _AddRoomPageState extends State<AddRoomPage> {
                   TextFormField(
                     controller: _roomController,
                     keyboardType: TextInputType.number,
-                    decoration: InputDecoration(labelText: "Room Number", border: OutlineInputBorder()),
+                    decoration: InputDecoration(
+                      labelText: "Room Number",
+                      labelStyle: TextStyle(color: Color(0xD72A8AEA)),
+                      border: OutlineInputBorder(
+                        borderSide: BorderSide(color: Color(0xD72A8AEA)),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Color(0xD72A8AEA)),
+                      ),
+                      filled: true,
+                      fillColor: Colors.white,
+                    ),
                     validator: (value) => value == null || value.isEmpty ? "Enter room number" : null,
                   ),
                   SizedBox(height: 16),
                   TextFormField(
                     controller: _sizeController,
-                    decoration: InputDecoration(labelText: "Size of Room (e.g. 12x10 ft)", border: OutlineInputBorder()),
+                    decoration: InputDecoration(
+                      labelText: "Size of Room (e.g. 12x10 ft)",
+                      labelStyle: TextStyle(color: Color(0xD72A8AEA)),
+                      border: OutlineInputBorder(
+                        borderSide: BorderSide(color: Color(0xD72A8AEA)),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Color(0xD72A8AEA)),
+                      ),
+                      filled: true,
+                      fillColor: Colors.white,
+                    ),
                     validator: (value) => value == null || value.isEmpty ? "Enter room size" : null,
                   ),
                   SizedBox(height: 16),
                   DropdownButtonFormField<String>(
                     value: _selectedSharing,
                     items: ['2', '3', '4', '5']
-                        .map((val) => DropdownMenuItem(value: val, child: Text("$val Sharing")))
+                        .map((val) => DropdownMenuItem(
+                      value: val,
+                      child: Text("$val Sharing", style: TextStyle(color: Colors.black)),
+                    ))
                         .toList(),
                     onChanged: (val) {
                       setState(() {
                         _selectedSharing = val;
                       });
                     },
-                    decoration: InputDecoration(labelText: "Sharing", border: OutlineInputBorder()),
+                    decoration: InputDecoration(
+                      labelText: "Sharing",
+                      labelStyle: TextStyle(color: Color(0xD72A8AEA)),
+                      border: OutlineInputBorder(
+                        borderSide: BorderSide(color: Color(0xD72A8AEA)),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Color(0xD72A8AEA)),
+                      ),
+                      filled: true,
+                      fillColor: Colors.white,
+                    ),
+                    dropdownColor: Colors.white,
+                    style: TextStyle(color: Colors.black),
                     validator: (val) => val == null ? "Select sharing" : null,
                   ),
                   SizedBox(height: 24),
@@ -142,11 +191,14 @@ class _AddRoomPageState extends State<AddRoomPage> {
                     width: double.infinity,
                     child: ElevatedButton(
                       onPressed: _submit,
-                      child: Text("Add Room"),
+                      child: Text("Add Room", style: TextStyle(color: Colors.white)),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Color(0xff12d3c6),
+                        backgroundColor: Color(0xD72A8AEA), // Blue button
                         padding: EdgeInsets.symmetric(vertical: 14),
                         textStyle: TextStyle(fontSize: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
                     ),
                   ),
@@ -155,7 +207,7 @@ class _AddRoomPageState extends State<AddRoomPage> {
             ),
             SizedBox(height: 32),
             _rooms.isEmpty
-                ? Center(child: Text("No rooms added yet."))
+                ? Center(child: Text("No rooms added yet.", style: TextStyle(color: Colors.grey)))
                 : GridView.builder(
               shrinkWrap: true,
               padding: EdgeInsets.only(bottom: 16),
@@ -172,21 +224,24 @@ class _AddRoomPageState extends State<AddRoomPage> {
                 return GestureDetector(
                   onTap: () => _navigateToRoomDetails(room.key),
                   child: Card(
-                    color: Colors.teal.shade50,
-                    elevation: 6,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    color: Colors.white, // White card background
+                    elevation: 4,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      side: BorderSide(color: Color(0xD72A8AEA).withOpacity(0.3)),
+                    ),
                     child: Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.bed, size: 36, color: Colors.teal.shade700),
+                          Icon(Icons.bed, size: 36, color: Color(0xD72A8AEA)), // Blue icon
                           SizedBox(height: 8),
                           Text(
                             "Room No: ${room.roomNumber}",
                             style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 16,
-                                color: Colors.teal.shade900),
+                                color: Color(0xD72A8AEA)), // Blue text
                             textAlign: TextAlign.center,
                           ),
                         ],
