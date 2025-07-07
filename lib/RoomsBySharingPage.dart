@@ -22,23 +22,32 @@ class _RoomsBySharingPageState extends State<RoomsBySharingPage> {
   bool _isLoading = true;
   late final int totalBeds;
 
+  Stream<DatabaseEvent>? _roomStream;
+  Stream<DatabaseEvent>? _bedStream;
+
   @override
   void initState() {
     super.initState();
     totalBeds = int.tryParse(widget.sharing) ?? 0;
-    _loadAllData();
+    _listenToDataChanges();
+  }
+
+  void _listenToDataChanges() {
+    _roomStream = _roomRef.onValue;
+    _bedStream = _bedRef.onValue;
+
+    _roomStream!.listen((_) => _loadAllData());
+    _bedStream!.listen((_) => _loadAllData());
+
+    _loadAllData(); // Initial load
   }
 
   Future<void> _loadAllData() async {
     setState(() => _isLoading = true);
 
     try {
-      final roomFuture = _roomRef.get();
-      final bedFuture = _bedRef.get();
-      final results = await Future.wait([roomFuture, bedFuture]);
-
-      final roomSnapshot = results[0];
-      final bedSnapshot = results[1];
+      final roomSnapshot = await _roomRef.get();
+      final bedSnapshot = await _bedRef.get();
 
       final roomData = (roomSnapshot.value as Map?)?.cast<String, dynamic>();
       final bedData = (bedSnapshot.value as Map?)?.cast<String, dynamic>();
@@ -96,6 +105,66 @@ class _RoomsBySharingPageState extends State<RoomsBySharingPage> {
     }
   }
 
+  Widget _buildCard(BuildContext context, RoomRetrievalModel room, Color cardColor, int availableBeds) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => RoomDetailPage(roomId: room.key),
+          ),
+        );
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(color: Colors.grey.shade300, blurRadius: 6, offset: Offset(2, 2)),
+          ],
+        ),
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.meeting_room, size: 36, color: cardColor),
+            const SizedBox(height: 12),
+            Text(
+              "Room No: ${room.roomNumber}",
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              alignment: WrapAlignment.center,
+              spacing: 4,
+              runSpacing: 4,
+              children: List.generate(
+                totalBeds,
+                    (_) => const Icon(Icons.bed, size: 18, color: Colors.grey),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              "Available: $availableBeds / $totalBeds",
+              style: const TextStyle(fontSize: 12, color: Colors.black54),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _roomStream = null;
+    _bedStream = null;
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
@@ -104,7 +173,8 @@ class _RoomsBySharingPageState extends State<RoomsBySharingPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text("${widget.sharing}-Sharing Rooms"),
-        backgroundColor: const Color(0xD72A8AEA),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -118,83 +188,15 @@ class _RoomsBySharingPageState extends State<RoomsBySharingPage> {
             crossAxisCount: isTablet ? 3 : 2,
             crossAxisSpacing: 12,
             mainAxisSpacing: 12,
-            childAspectRatio: 4 / 3, // Bigger card
           ),
           itemBuilder: (context, index) {
             final room = _rooms[index];
-            final cardColor = _roomCardColors[room.key] ?? Colors.white;
+            final cardColor = _roomCardColors[room.key] ?? Colors.blueAccent;
             final availableBeds = _availableBedsCount[room.key] ?? 0;
 
-            return InkWell(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => RoomDetailPage(roomId: room.key),
-                  ),
-                );
-              },
-              child: Card(
-                color: cardColor,
-                elevation: 4,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    return SingleChildScrollView(
-                      padding: const EdgeInsets.all(0.0),
-                      physics: const NeverScrollableScrollPhysics(),
-                      child: ConstrainedBox(
-                        constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                        child: IntrinsicHeight(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              Text(
-                                "Room No: ${room.roomNumber}",
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                textAlign: TextAlign.center,
-                              ),
-                              const SizedBox(height: 10),
-                              Wrap(
-                                alignment: WrapAlignment.center,
-                                spacing: 4,
-                                runSpacing: 4,
-                                children: List.generate(
-                                  totalBeds,
-                                      (_) => const Icon(Icons.bed, size: 18, color: Colors.grey),
-                                ),
-                              ),
-                              const SizedBox(height: 10),
-                              Text(
-                                "Available Beds: $availableBeds / $totalBeds",
-                                style: const TextStyle(
-                                  fontSize: 10,
-                                  color: Colors.black54,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                textAlign: TextAlign.center,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            );
+            return _buildCard(context, room, cardColor, availableBeds);
           },
         ),
-
       ),
     );
   }

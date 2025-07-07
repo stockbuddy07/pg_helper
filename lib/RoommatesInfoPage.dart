@@ -38,8 +38,7 @@ class _RoommatesInfoPageState extends State<RoommatesInfoPage> {
       final currentUserData = allUsers[currentUserKey];
 
       currentRoomNumber = currentUserData['RoomNumber'];
-      currentSharing =
-          int.tryParse(currentUserData['Sharing'].toString()) ?? 0;
+      currentSharing = int.tryParse(currentUserData['Sharing'].toString()) ?? 0;
 
       final others = allUsers.entries
           .where((entry) =>
@@ -50,11 +49,17 @@ class _RoommatesInfoPageState extends State<RoommatesInfoPage> {
         "${e.value['FirstName'] ?? ''} ${e.value['LastName'] ?? ''}",
         "contact": e.value['ContactNumber'] ?? '',
         "avatar": e.value['avatar'] ?? null,
+        "isPlaceholder": false,
       })
           .toList();
 
       while (others.length < currentSharing - 1) {
-        others.add({"name": "", "contact": "", "avatar": null});
+        others.add({
+          "name": "",
+          "contact": "",
+          "avatar": null,
+          "isPlaceholder": true,
+        });
       }
 
       setState(() {
@@ -81,6 +86,7 @@ class _RoommatesInfoPageState extends State<RoommatesInfoPage> {
   Widget buildRoommateCard(Map<String, dynamic> rm) {
     final String name = rm['name'];
     final String contact = rm['contact'];
+    final bool isPlaceholder = rm['isPlaceholder'] ?? false;
     final String firstLetter = name.isNotEmpty ? name[0].toUpperCase() : '?';
 
     return Card(
@@ -117,7 +123,11 @@ class _RoommatesInfoPageState extends State<RoommatesInfoPage> {
             ),
             const SizedBox(height: 5),
             Text(
-              contact.isNotEmpty ? contact : "Waiting for contact...",
+              contact.isNotEmpty
+                  ? contact
+                  : isPlaceholder
+                  ? "Waiting for roommate..."
+                  : "Waiting for contact...",
               style: const TextStyle(color: Colors.grey),
             ),
             const SizedBox(height: 12),
@@ -127,7 +137,8 @@ class _RoommatesInfoPageState extends State<RoommatesInfoPage> {
               children: [
                 ElevatedButton.icon(
                   onPressed: () => _callNumber(contact),
-                  icon: const Icon(Icons.phone, color: Colors.white),
+                  icon:
+                  const Icon(Icons.phone, color: Colors.white),
                   label: const Text("Call"),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.green,
@@ -135,7 +146,8 @@ class _RoommatesInfoPageState extends State<RoommatesInfoPage> {
                 ),
                 ElevatedButton.icon(
                   onPressed: () => _sendSMS(contact),
-                  icon: const Icon(Icons.message, color: Colors.white),
+                  icon:
+                  const Icon(Icons.message, color: Colors.white),
                   label: const Text("Message"),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blueAccent,

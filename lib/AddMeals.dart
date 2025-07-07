@@ -23,8 +23,20 @@ class _AddDailyMealState extends State<AddDailyMeal> {
   void initState() {
     super.initState();
     final today = DateTime.now();
-    dateController.text =
-    "${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}";
+    final todayDate =
+        "${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}";
+    dateController.text = todayDate;
+
+    // Fetch existing meal if available and pre-fill controllers
+    dbRef.orderByChild('date').equalTo(todayDate).once().then((snapshot) {
+      if (snapshot.snapshot.exists) {
+        final existingMeal = snapshot.snapshot.children.first.value as Map;
+        breakfastController.text = existingMeal['breakfast'] ?? '';
+        lunchController.text = existingMeal['lunch'] ?? '';
+        dinnerController.text = existingMeal['dinner'] ?? '';
+        snacksController.text = existingMeal['snacks'] ?? '';
+      }
+    });
   }
 
   @override
@@ -39,8 +51,9 @@ class _AddDailyMealState extends State<AddDailyMeal> {
 
   Future<void> submitMeal() async {
     if (_formKey.currentState!.validate()) {
+      final todayDate = dateController.text.trim();
       final mealData = {
-        'date': dateController.text.trim(),
+        'date': todayDate,
         'breakfast': breakfastController.text.trim(),
         'lunch': lunchController.text.trim(),
         'dinner': dinnerController.text.trim(),
@@ -48,15 +61,32 @@ class _AddDailyMealState extends State<AddDailyMeal> {
         'timestamp': DateTime.now().toIso8601String(),
       };
 
-      await dbRef.push().set(mealData);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Meal added successfully')),
-      );
+      try {
+        final snapshot =
+        await dbRef.orderByChild('date').equalTo(todayDate).once();
 
-      breakfastController.clear();
-      lunchController.clear();
-      dinnerController.clear();
-      snacksController.clear();
+        if (snapshot.snapshot.exists) {
+          final existingMealKey = snapshot.snapshot.children.first.key;
+          await dbRef.child(existingMealKey!).update(mealData);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Meal updated successfully')),
+          );
+        } else {
+          await dbRef.push().set(mealData);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Meal added successfully')),
+          );
+        }
+
+        breakfastController.clear();
+        lunchController.clear();
+        dinnerController.clear();
+        snacksController.clear();
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
     }
   }
 
@@ -123,7 +153,10 @@ class _AddDailyMealState extends State<AddDailyMeal> {
                 validator: (value) =>
                 value == null || value.isEmpty ? 'Enter dinner' : null,
               ),
-
+              buildTextField(
+                label: 'Snacks',
+                controller: snacksController,
+              ),
               const SizedBox(height: 10),
               SizedBox(
                 width: double.infinity,

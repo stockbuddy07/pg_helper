@@ -4,19 +4,63 @@ import 'RoomsBySharingPage.dart';
 class ShowRoomsPage extends StatelessWidget {
   final List<String> sharingOptions = ['2', '3', '4', '5'];
 
-  final List<Color> cardColors = [
-    Color(0xFF80DEEA), // Light Cyan
-    Color(0xFF81C784), // Light Green
-    Color(0xFFFFAB91), // Soft Orange
-    Color(0xFFCE93D8), // Light Purple
+  final List<Color> iconColors = [
+    Colors.blueAccent,
+    Colors.green,
+    Colors.deepOrange,
+    Colors.purple,
   ];
+
+  final List<IconData> sharingIcons = [
+    Icons.group,
+    Icons.group_work,
+    Icons.people_alt,
+    Icons.bed,
+  ];
+
+  void _navigateToSharingPage(BuildContext context, String sharing) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => RoomsBySharingPage(sharing: sharing),
+      ),
+    );
+  }
+
+  Widget _buildSharingCard(BuildContext context, String title, IconData icon, Color iconColor, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(color: Colors.grey.shade300, blurRadius: 6, offset: Offset(2, 2)),
+          ],
+        ),
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 36, color: iconColor),
+            const SizedBox(height: 12),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Select Room Sharing"),
-        backgroundColor: const Color(0xD72A8AEA),
+        backgroundColor: Colors.transparent,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -29,34 +73,15 @@ class ShowRoomsPage extends StatelessWidget {
           ),
           itemBuilder: (context, index) {
             final sharing = sharingOptions[index];
-            final cardColor = cardColors[index % cardColors.length];
+            final iconColor = iconColors[index % iconColors.length];
+            final icon = sharingIcons[index % sharingIcons.length];
 
-            return GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => RoomsBySharingPage(sharing: sharing),
-                  ),
-                );
-              },
-              child: Card(
-                color: cardColor,
-                elevation: 4,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Center(
-                  child: Text(
-                    "$sharing Sharing",
-                    style: const TextStyle(
-                      fontSize: 20,
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
+            return _buildSharingCard(
+              context,
+              "$sharing Sharing",
+              icon,
+              iconColor,
+                  () => _navigateToSharingPage(context, sharing),
             );
           },
         ),
