@@ -8,14 +8,14 @@ import 'electricity_issue.dart';
 import 'food_issue.dart';
 import 'internet_issue.dart';
 
-class MyHelpDesk extends StatefulWidget {
-  const MyHelpDesk({super.key});
+class MyHelpDesk_FAQ extends StatefulWidget {
+  const MyHelpDesk_FAQ({super.key});
 
   @override
-  State<MyHelpDesk> createState() => _MyHelpDeskState();
+  State<MyHelpDesk_FAQ> createState() => _MyHelpDeskState();
 }
 
-class _MyHelpDeskState extends State<MyHelpDesk> {
+class _MyHelpDeskState extends State<MyHelpDesk_FAQ> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController _textFieldController = TextEditingController();
   late String userKey;
@@ -47,7 +47,10 @@ class _MyHelpDeskState extends State<MyHelpDesk> {
               color: Colors.black, fontWeight: FontWeight.w600, fontSize: 20),
         ),
         iconTheme: const IconThemeData(color: Colors.blueAccent),
-
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.blueAccent),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
       endDrawer: const DrawerCode(),
       body: Container(

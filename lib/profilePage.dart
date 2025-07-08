@@ -12,6 +12,7 @@ import 'HelpDesk.dart';
 import 'UserChangePassword.dart';
 import 'ViewProfile.dart';
 import 'drawerSideNavigation.dart';
+import 'helpDesk_FAQ.dart';
 import 'main.dart';
 
 class MyProfile extends StatefulWidget {
@@ -74,7 +75,7 @@ class _MyProfileState extends State<MyProfile> {
 
     final ref = FirebaseDatabase.instance
         .ref()
-        .child("ArogyaSair/tblUser")
+        .child("PG_helper/tblUser")
         .orderByChild("Username")
         .equalTo(username);
 
@@ -183,7 +184,7 @@ class _MyProfileState extends State<MyProfile> {
                     ))),
             child: _menuRow('Contact Us'),
           ),
-          _menuTile('FAQ', const MyHelpDesk()),
+          _menuTile('FAQ', const MyHelpDesk_FAQ()),
           const Divider(thickness: 1, color: Colors.white12),
           InkWell(
             onTap: () async {

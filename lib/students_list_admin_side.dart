@@ -135,9 +135,19 @@ class _StudentsListAdminSideState extends State<StudentsListAdminSide> {
       backgroundColor: const Color(0xfff2f6f7),
       appBar: AppBar(
         backgroundColor: Colors.white,
-        title: const Text('Students List', style: TextStyle(color: Colors.black)),
-        iconTheme: const IconThemeData(color: Colors.blueAccent),
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.black), // back button color
+        title: const Text(
+          "Students List",
+          style: TextStyle(
+            color: Colors.black,
+            fontWeight: FontWeight.w700,
+            fontSize: 20,
+            letterSpacing: 0.5,
+          ),
+        ),
       ),
+
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : Column(

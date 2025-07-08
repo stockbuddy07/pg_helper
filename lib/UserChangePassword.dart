@@ -41,7 +41,7 @@ class _UserChangePasswordState extends State<UserChangePassword> {
 
     myauth.setConfig(
       appEmail: "arogyasair@gmail.com",
-      appName: "Arogya Sair",
+      appName: "Staymate",
       userEmail: controllerEmail.text,
       otpLength: 6,
       otpType: OTPType.mixed,

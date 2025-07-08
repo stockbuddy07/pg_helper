@@ -49,11 +49,20 @@ class _ContactUsState extends State<ContactUs> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Contact Us'),
-        backgroundColor: Colors.blueAccent,
+        backgroundColor: Colors.white,
         elevation: 0,
-        centerTitle: true,
+        iconTheme: const IconThemeData(color: Colors.black), // back button color
+        title: const Text(
+          "Contact Us",
+          style: TextStyle(
+            color: Colors.black,
+            fontWeight: FontWeight.w700,
+            fontSize: 20,
+            letterSpacing: 0.5,
+          ),
+        ),
       ),
+
       body: SizedBox(
         height: availableHeight,
         child: Padding(

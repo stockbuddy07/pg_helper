@@ -59,9 +59,20 @@ class ShowRoomsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Select Room Sharing"),
-        backgroundColor: Colors.transparent,
+        backgroundColor: Colors.white,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.black), // back button color
+        title: const Text(
+          "Select Room Sharing",
+          style: TextStyle(
+            color: Colors.black,
+            fontWeight: FontWeight.w700,
+            fontSize: 20,
+            letterSpacing: 0.5,
+          ),
+        ),
       ),
+
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: GridView.builder(

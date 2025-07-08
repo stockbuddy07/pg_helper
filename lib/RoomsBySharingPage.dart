@@ -6,7 +6,7 @@ import 'RoomDetailsPage.dart';
 class RoomsBySharingPage extends StatefulWidget {
   final String sharing;
 
-  RoomsBySharingPage({required this.sharing});
+  const RoomsBySharingPage({required this.sharing});
 
   @override
   _RoomsBySharingPageState createState() => _RoomsBySharingPageState();
@@ -85,7 +85,7 @@ class _RoomsBySharingPageState extends State<RoomsBySharingPage> {
           }
 
           colorMap[entry.key] =
-          notAvailableCount == totalBeds && totalBeds > 0 ? Colors.red[100]! : Colors.green[100]!;
+          notAvailableCount == totalBeds && totalBeds > 0 ? Colors.redAccent : Colors.green;
 
           availableMap[entry.key] = availableCount;
         }
@@ -115,24 +115,37 @@ class _RoomsBySharingPageState extends State<RoomsBySharingPage> {
           ),
         );
       },
-      child: Container(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeInOut,
         decoration: BoxDecoration(
-          color: Colors.white,
+          gradient: LinearGradient(
+            colors: [
+              cardColor.withOpacity(0.5),
+              Colors.white,
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
-            BoxShadow(color: Colors.grey.shade300, blurRadius: 6, offset: Offset(2, 2)),
+            BoxShadow(
+              color: Colors.grey.shade300,
+              blurRadius: 6,
+              offset: const Offset(2, 2),
+            ),
           ],
         ),
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.meeting_room, size: 36, color: cardColor),
-            const SizedBox(height: 12),
+            Icon(Icons.meeting_room, size: 52, color: Colors.deepPurple),
+            const SizedBox(height: 15),
             Text(
               "Room No: ${room.roomNumber}",
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
@@ -140,13 +153,16 @@ class _RoomsBySharingPageState extends State<RoomsBySharingPage> {
             Wrap(
               alignment: WrapAlignment.center,
               spacing: 4,
-              runSpacing: 4,
               children: List.generate(
                 totalBeds,
-                    (_) => const Icon(Icons.bed, size: 18, color: Colors.grey),
+                    (index) => Icon(
+                  Icons.bed,
+                  size: 25,
+                  color: index < availableBeds ? Colors.green : Colors.red,
+                ),
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 18),
             Text(
               "Available: $availableBeds / $totalBeds",
               style: const TextStyle(fontSize: 12, color: Colors.black54),
@@ -160,9 +176,9 @@ class _RoomsBySharingPageState extends State<RoomsBySharingPage> {
 
   @override
   void dispose() {
-    super.dispose();
     _roomStream = null;
     _bedStream = null;
+    super.dispose();
   }
 
   @override
@@ -172,14 +188,28 @@ class _RoomsBySharingPageState extends State<RoomsBySharingPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text("${widget.sharing}-Sharing Rooms"),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
+        backgroundColor: Colors.white,
+        elevation: 2,
+        iconTheme: const IconThemeData(color: Colors.black),
+        title: Text(
+          "${widget.sharing}-Sharing Rooms",
+          style: const TextStyle(
+            color: Colors.black,
+            fontWeight: FontWeight.w700,
+            fontSize: 20,
+            letterSpacing: 0.5,
+          ),
+        ),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _rooms.isEmpty
-          ? Center(child: Text("No rooms found for ${widget.sharing}-sharing."))
+          ? Center(
+        child: Text(
+          "No rooms found for ${widget.sharing}-sharing.",
+          style: const TextStyle(fontSize: 16, color: Colors.black54),
+        ),
+      )
           : Padding(
         padding: const EdgeInsets.all(16.0),
         child: GridView.builder(
@@ -188,12 +218,12 @@ class _RoomsBySharingPageState extends State<RoomsBySharingPage> {
             crossAxisCount: isTablet ? 3 : 2,
             crossAxisSpacing: 12,
             mainAxisSpacing: 12,
+            childAspectRatio: 3 / 3.5, // Slightly taller for room content
           ),
           itemBuilder: (context, index) {
             final room = _rooms[index];
             final cardColor = _roomCardColors[room.key] ?? Colors.blueAccent;
             final availableBeds = _availableBedsCount[room.key] ?? 0;
-
             return _buildCard(context, room, cardColor, availableBeds);
           },
         ),

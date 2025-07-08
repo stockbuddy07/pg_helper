@@ -24,7 +24,8 @@ class _AddDailyMealState extends State<AddDailyMeal> {
     super.initState();
     final today = DateTime.now();
     final todayDate =
-        "${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}";
+        "${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day
+        .toString().padLeft(2, '0')}";
     dateController.text = todayDate;
 
     // Fetch existing meal if available and pre-fill controllers
@@ -96,39 +97,57 @@ class _AddDailyMealState extends State<AddDailyMeal> {
     String? Function(String?)? validator,
     bool readOnly = false,
   }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        TextFormField(
-          controller: controller,
-          readOnly: readOnly,
-          decoration: InputDecoration(
-            labelText: label,
-            filled: true,
-            fillColor: Colors.grey.shade100,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 18),
+      child: TextFormField(
+        controller: controller,
+        readOnly: readOnly,
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: const TextStyle(fontWeight: FontWeight.w500),
+          filled: true,
+          fillColor: Colors.grey.shade100,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
           ),
-          validator: validator,
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(
+                color: Colors.deepPurple.shade300, width: 1.5),
+          ),
+          contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16, vertical: 14),
         ),
-        const SizedBox(height: 16),
-      ],
+        style: const TextStyle(fontSize: 15),
+        validator: validator,
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Add Daily Meal'),
-        backgroundColor: const Color(0xD72A8AEA),
+        backgroundColor: Colors.white,
+        elevation: 0.5,
+        iconTheme: const IconThemeData(color: Colors.black87),
+        title: const Text(
+          "Add Daily Meal",
+          style: TextStyle(
+            color: Colors.black87,
+            fontWeight: FontWeight.w700,
+            fontSize: 20,
+          ),
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Form(
           key: _formKey,
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               buildTextField(
                 label: 'Date',
@@ -157,21 +176,22 @@ class _AddDailyMealState extends State<AddDailyMeal> {
                 label: 'Snacks',
                 controller: snacksController,
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 25),
               SizedBox(
                 width: double.infinity,
                 height: 50,
-                child: ElevatedButton(
+                child: ElevatedButton.icon(
                   onPressed: submitMeal,
+                  icon: const Icon(Icons.check_circle_outline, size: 20),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xD72A8AEA),
+                    backgroundColor: Colors.blue,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),
                     ),
                   ),
-                  child: const Text(
+                  label: const Text(
                     'Submit Meal',
-                    style: TextStyle(fontSize: 16, color: Colors.white),
+                    style: TextStyle(fontSize: 20, color: Colors.white),
                   ),
                 ),
               ),

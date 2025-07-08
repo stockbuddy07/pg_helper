@@ -110,10 +110,20 @@ class _AddRoomPageState extends State<AddRoomPage> {
     return Scaffold(
       backgroundColor: Colors.white, // White background
       appBar: AppBar(
-        title: Text("Add Room", style: TextStyle(color: Colors.white)),
-        backgroundColor: Color(0xD72A8AEA), // Blue app bar
+        backgroundColor: Colors.white,
         elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.black), // back button color
+        title: const Text(
+          "Add Room",
+          style: TextStyle(
+            color: Colors.black,
+            fontWeight: FontWeight.w700,
+            fontSize: 20,
+            letterSpacing: 0.5,
+          ),
+        ),
       ),
+
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(

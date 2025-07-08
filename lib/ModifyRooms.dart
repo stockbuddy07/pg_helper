@@ -101,9 +101,20 @@ class _ModifyRoomsPageState extends State<ModifyRoomsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Modify Rooms'),
-        backgroundColor: const Color(0xD72A8AEA),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.black), // back button color
+        title: const Text(
+          "Modify Rooms",
+          style: TextStyle(
+            color: Colors.black,
+            fontWeight: FontWeight.w700,
+            fontSize: 20,
+            letterSpacing: 0.5,
+          ),
+        ),
       ),
+
       body: _rooms.isEmpty
           ? const Center(child: Text('No rooms found'))
           : ListView.builder(

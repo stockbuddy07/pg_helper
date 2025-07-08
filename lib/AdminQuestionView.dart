@@ -113,17 +113,23 @@ class _AdminQuestionView extends State<AdminQuestionView> {
       child: Scaffold(
         backgroundColor: const Color(0xfff2f6f7),
         appBar: AppBar(
-          backgroundColor: const Color(0xD72A8AEA),
+          backgroundColor: Colors.white,
+          elevation: 0,
+          iconTheme: const IconThemeData(color: Colors.black),
           title: const Text(
             'Admin Question View',
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              color: Colors.black,
+              fontWeight: FontWeight.w700,
+              fontSize: 20,
+              letterSpacing: 0.5,
+            ),
           ),
           centerTitle: true,
-          elevation: 0,
           bottom: const TabBar(
-            indicatorColor: Colors.white,
-            labelColor: Colors.white,
-            unselectedLabelColor: Colors.white70,
+            indicatorColor: Colors.black,
+            labelColor: Colors.black,
+            unselectedLabelColor: Colors.black45,
             labelStyle: TextStyle(fontWeight: FontWeight.bold),
             tabs: [
               Tab(text: 'Unanswered'),
@@ -131,6 +137,7 @@ class _AdminQuestionView extends State<AdminQuestionView> {
             ],
           ),
         ),
+
         body: StreamBuilder(
           stream: dbRef.onValue,
           builder: (context, snapshot) {

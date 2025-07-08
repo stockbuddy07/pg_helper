@@ -50,9 +50,20 @@ class _RoomManagementDashboardState extends State<RoomManagementDashboard> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Room Management"),
-        backgroundColor: Colors.transparent,
+        backgroundColor: Colors.white,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.black), // back button color
+        title: const Text(
+          "Room Management",
+          style: TextStyle(
+            color: Colors.black,
+            fontWeight: FontWeight.w700,
+            fontSize: 20,
+            letterSpacing: 0.5,
+          ),
+        ),
       ),
+
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: GridView.count(

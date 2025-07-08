@@ -412,7 +412,7 @@ class _EditProfileState extends State<EditProfile> {
                                   SingleChildScrollView(
                                     scrollDirection: Axis.horizontal,
                                     child: Row(
-                                      children: ["Male", "Female", "Other"].map((gender) {
+                                      children: ["Male", "Female"].map((gender) {
                                         return Padding(
                                           padding: const EdgeInsets.only(right: 20),
                                           child: Row(

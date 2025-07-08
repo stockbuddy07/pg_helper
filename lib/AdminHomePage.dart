@@ -20,7 +20,7 @@ class AdminHomePage extends StatefulWidget {
 }
 
 class _AdminHomePageState extends State<AdminHomePage> {
-  String displayName = "Welcome Admin";
+  String displayName = " Admin";
   int totalStudents = 0;
 
   final DatabaseReference _usersRef =
@@ -63,9 +63,34 @@ class _AdminHomePageState extends State<AdminHomePage> {
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: Colors.white,
+        elevation: 2,
+        iconTheme: const IconThemeData(color: Colors.black),
         automaticallyImplyLeading: false,
-        title: Text(displayName, style: TextStyle(color: Colors.black)),
+        title: RichText(
+          text: TextSpan(
+            children: [
+              const TextSpan(
+                text: 'Welcome ,',
+                style: TextStyle(
+                  color: Colors.black,
+                  fontWeight: FontWeight.normal,
+                  fontSize: 20,
+                  letterSpacing: 0.5,
+                ),
+              ),
+              TextSpan(
+                text: displayName, // assuming 'Admin' or dynamic value
+                style: const TextStyle(
+                  color: Colors.black,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ],
+          ),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.logout, color: Colors.black),
@@ -74,6 +99,8 @@ class _AdminHomePageState extends State<AdminHomePage> {
           ),
         ],
       ),
+
+
       body: SingleChildScrollView(
         padding: EdgeInsets.all(16),
         child: Column(
