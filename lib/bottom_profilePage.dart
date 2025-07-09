@@ -15,17 +15,17 @@ import 'drawerSideNavigation.dart';
 import 'helpDesk_FAQ.dart';
 import 'login.dart';
 
-class MyProfile extends StatefulWidget {
+class MyProfile1 extends StatefulWidget {
   final String username;
   final String email;
 
-  const MyProfile(this.username, this.email, {super.key});
+  const MyProfile1(this.username, this.email, {super.key});
 
   @override
   _MyProfileState createState() => _MyProfileState();
 }
 
-class _MyProfileState extends State<MyProfile> {
+class _MyProfileState extends State<MyProfile1> {
   String imagePath =
       "https://firebasestorage.googleapis.com/v0/b/arogyasair-157e8.appspot.com/o/UserImage%2FDefaultProfileImage.png?alt=media";
 
@@ -114,10 +114,7 @@ class _MyProfileState extends State<MyProfile> {
           style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
         ),
         iconTheme: const IconThemeData(color: Colors.black),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
-        ),
+        leading: null, // Removed back icon
       ),
       endDrawer: const DrawerCode(),
       body: Column(
@@ -176,12 +173,14 @@ class _MyProfileState extends State<MyProfile> {
           _menuTile('About Us', const AboutUs()),
           InkWell(
             onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => ContactUs(
-                      userLastName: userLastName,
-                      userFirstName: userFirstName,
-                    ))),
+              context,
+              MaterialPageRoute(
+                builder: (context) => ContactUs(
+                  userLastName: userLastName,
+                  userFirstName: userFirstName,
+                ),
+              ),
+            ),
             child: _menuRow('Contact Us'),
           ),
           _menuTile('FAQ', const MyHelpDesk_FAQ()),

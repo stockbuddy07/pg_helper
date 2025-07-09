@@ -4,10 +4,10 @@ import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:pg_helper/HomePage.dart';
 import 'package:pg_helper/saveSharePreferences.dart';
-import 'package:pg_helper/profilePage.dart';
 
 import 'HelpDesk.dart';
 import 'PaymentHistory.dart';
+import 'bottom_profilePage.dart';
 
 class BottomBar extends StatefulWidget {
   const BottomBar({super.key});
@@ -18,62 +18,72 @@ class BottomBar extends StatefulWidget {
 
 class _BottomBarState extends State<BottomBar> {
   int _selectedIndex = 0;
-  late String username;
-  late String email;
-  final key = 'username';
-  final key1 = 'email';
-  late String firstName;
-  late String userKey;
+  String? username;
+  String? email;
+  String? firstName;
+  String? userKey;
   List<Widget> _widgetOptions = [];
 
   @override
   void initState() {
     super.initState();
-    _selectedIndex = 0;
     _loadUserData();
   }
 
   Future<void> _loadUserData() async {
-    String? userData = await getData(key);
-    String? userEmail = await getData(key1);
+    String? userData = await getData('username');
+    String? userEmail = await getData('email');
     String? userFirstName = await getData("firstname");
     String? userkey = await getKey();
-    setState(() {
-      username = userData!;
-      email = userEmail!;
-      userKey = userkey!;
-      firstName = userFirstName!;
-    });
-    _widgetOptions = <Widget>[
-      Scaffold(
-        backgroundColor: Colors.white,
-        body: HomePage(
-          firstname: firstName,
-        ),
-      ),
-      const Scaffold(
-        backgroundColor: Colors.white,
-        body: UpiPaymentPage(),
-      ),
-      const Scaffold(
-        backgroundColor: Colors.white,
-        body: MyHelpDesk(),
-      ),
-      Scaffold(
-        backgroundColor: Colors.white,
-        body: MyProfile(username, email),
-      ),
-    ];
+
+    if (userData != null && userEmail != null && userFirstName != null && userkey != null) {
+      setState(() {
+        username = userData;
+        email = userEmail;
+        firstName = userFirstName;
+        userKey = userkey;
+
+        _widgetOptions = <Widget>[
+          Scaffold(
+            backgroundColor: Colors.white,
+            body: HomePage(
+              firstname: firstName!,
+            ),
+          ),
+          const Scaffold(
+            backgroundColor: Colors.white,
+            body: UpiPaymentPage(),
+          ),
+          const Scaffold(
+            backgroundColor: Colors.white,
+            body: MyHelpDesk(),
+          ),
+          Scaffold(
+            backgroundColor: Colors.white,
+            body: MyProfile1(username!, email!),
+          ),
+        ];
+      });
+    } else {
+      // Handle missing data if necessary
+      setState(() {
+        _widgetOptions = [
+          const Center(child: Text("Failed to load user data")),
+        ];
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.transparent,
-      body: Center(
-        child: _widgetOptions.elementAt(_selectedIndex),
-      ),
-      bottomNavigationBar: Container(
+      body: _widgetOptions.isEmpty
+          ? const Center(child: CircularProgressIndicator())
+          : _widgetOptions.elementAt(_selectedIndex),
+      bottomNavigationBar: _widgetOptions.length < 4
+          ? null // Hide nav bar until all tabs are ready
+          : Container(
         color: Colors.white,
         child: CurvedNavigationBar(
           backgroundColor: const Color(0x0000ffff),
@@ -90,7 +100,7 @@ class _BottomBarState extends State<BottomBar> {
             _buildIcon(Icons.live_help_outlined, 2),
             _buildIcon(Icons.person, 3),
           ],
-          index: _selectedIndex, // Use 'index' instead of 'currentIndex'
+          index: _selectedIndex,
         ),
       ),
     );
