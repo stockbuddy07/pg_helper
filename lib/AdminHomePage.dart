@@ -119,22 +119,29 @@ class _AdminHomePageState extends State<AdminHomePage> {
               crossAxisCount: 2,
               shrinkWrap: true,
               physics: NeverScrollableScrollPhysics(),
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
+              crossAxisSpacing: 10,
+              mainAxisSpacing: 10,
+              childAspectRatio: 1.2,
+              // Increased ratio to make cards shorter
               children: [
-                _buildDashboardCard("Add Rooms", Icons.meeting_room, Colors.blueAccent, () {
+                _buildDashboardCard(
+                    "Add Rooms", Icons.meeting_room, Colors.blueAccent, () {
                   _navigateToPage(RoomManagementDashboard());
                 }),
-                _buildDashboardCard("Add Meals", Icons.fastfood, Colors.blueAccent, () {
+                _buildDashboardCard(
+                    "Add Meals", Icons.fastfood, Colors.blueAccent, () {
                   _navigateToPage(AddDailyMeal());
                 }),
-                _buildDashboardCard("User Requests", Icons.group, Colors.blueAccent, () {
+                _buildDashboardCard(
+                    "User Requests", Icons.group, Colors.blueAccent, () {
                   _navigateToPage(PendingUsersPage());
                 }),
-                _buildDashboardCard("Query Zone", Icons.event, Colors.blueAccent, () {
+                _buildDashboardCard(
+                    "Query Zone", Icons.event, Colors.blueAccent, () {
                   _navigateToPage(AdminQuestionView());
                 }),
-                _buildDashboardCard("Students List", Icons.event, Colors.blueAccent, () {
+                _buildDashboardCard(
+                    "Students List", Icons.event, Colors.blueAccent, () {
                   _navigateToPage(StudentsListAdminSide());
                 }),
               ],
@@ -147,36 +154,64 @@ class _AdminHomePageState extends State<AdminHomePage> {
     );
   }
 
-  Widget _infoCard({required String title, required String value, required Color color, required IconData icon}) {
+  Widget _infoCard({
+    required String title,
+    required String value,
+    required Color color,
+    required IconData icon,
+  }) {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      padding: EdgeInsets.all(2),
       decoration: BoxDecoration(
-        color: Colors.white,
+        gradient: LinearGradient(
+          colors: [Colors.white, Colors.blue.shade700],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
-          BoxShadow(color: Colors.grey.shade300, blurRadius: 6, offset: Offset(2, 2)),
+          BoxShadow(
+              color: Colors.grey.shade300, blurRadius: 6, offset: Offset(2, 2)),
         ],
       ),
-      child: Row(
-        children: [
-          CircleAvatar(
-            backgroundColor: color.withOpacity(0.1),
-            child: Icon(icon, color: color),
-          ),
-          SizedBox(width: 16),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(title, style: TextStyle(fontSize: 16, color: Colors.grey[700])),
-              SizedBox(height: 4),
-              Text(value, style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: color)),
-            ],
-          ),
-        ],
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Row(
+          children: [
+            CircleAvatar(
+              backgroundColor: color.withOpacity(0.2),
+              child: Icon(icon, color: color),
+            ),
+            SizedBox(width: 16),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(fontSize: 16, color: Colors.black),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  value,
+                  style: TextStyle(
+                    fontSize: 26,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black, // black value text
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
+
 
   Widget _buildDashboardCard(String title, IconData icon, Color color, VoidCallback onTap) {
     return GestureDetector(

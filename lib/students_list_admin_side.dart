@@ -100,7 +100,7 @@ class _StudentsListAdminSideState extends State<StudentsListAdminSide> {
       margin: const EdgeInsets.symmetric(vertical: 6),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: Colors.blue.shade200,
+          backgroundColor: Colors.blue.shade300,
           child: Text(firstLetter,
               style: const TextStyle(fontWeight: FontWeight.bold)),
         ),
@@ -113,18 +113,15 @@ class _StudentsListAdminSideState extends State<StudentsListAdminSide> {
               icon: const Icon(Icons.call, color: Colors.green),
               onPressed: () => _callStudent(contact),
             ),
-            IconButton(
-              icon: const Icon(Icons.message, color: Colors.blueAccent),
-              onPressed: () => _messageStudent(contact),
-            ),
-            IconButton(
-              icon: const FaIcon(FontAwesomeIcons.whatsapp, color: Colors.green),
-              onPressed: () => _openWhatsApp(contact),
-            ),
+            // IconButton(
+            //   icon: const Icon(Icons.message, color: Colors.blueAccent),
+            //   onPressed: () => _messageStudent(contact),
+            // ),
+
 
           ],
         ),
-        onTap: () => _callStudent(contact), // Optional direct call on tap
+
       ),
     );
   }
@@ -132,7 +129,6 @@ class _StudentsListAdminSideState extends State<StudentsListAdminSide> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xfff2f6f7),
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,

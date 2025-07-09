@@ -13,6 +13,7 @@ import 'UserChangePassword.dart';
 import 'ViewProfile.dart';
 import 'drawerSideNavigation.dart';
 import 'helpDesk_FAQ.dart';
+import 'login.dart';
 import 'main.dart';
 
 class MyProfile extends StatefulWidget {
@@ -190,9 +191,11 @@ class _MyProfileState extends State<MyProfile> {
             onTap: () async {
               final prefs = await SharedPreferences.getInstance();
               await prefs.clear();
-              Navigator.pushReplacement(
+
+              Navigator.pushAndRemoveUntil(
                 context,
-                MaterialPageRoute(builder: (_) => const MyApp()),
+                MaterialPageRoute(builder: (_) => const Login()),
+                    (Route<dynamic> route) => false,
               );
             },
             child: _menuRow('Log Out', icon: Icons.logout),

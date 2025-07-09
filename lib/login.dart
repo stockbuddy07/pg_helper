@@ -299,6 +299,7 @@ class _LoginState extends State<Login> {
           await saveData('email', data["Email"] ?? "");
           await saveData('status', data["Status"] ?? "");
           await saveData('key', key ?? "");
+          await saveData('isLoggedIn', 'true');
 
           loginSuccess = true;
 

@@ -161,11 +161,14 @@ class _DrawerCode extends State<DrawerCode> {
             title: const Text("Log out"),
             onTap: () async {
               SharedPreferences prefs = await SharedPreferences.getInstance();
-              prefs.clear();
-              Navigator.pop(context);
-              Navigator.pop(context);
-              Navigator.push(context,
-                  MaterialPageRoute(builder: (context) => const Login()));
+              await prefs.clear();
+
+              // Reset entire navigation stack and go to Login page
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (context) => const Login()),
+                    (Route<dynamic> route) => false,
+              );
             },
           ),
         ],

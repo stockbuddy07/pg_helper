@@ -149,12 +149,11 @@ class _ContactUsState extends State<ContactUs> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
+
                       _buildSocialIcon(Icons.facebook, () => _launchUrl('https://facebook.com/staymate')),
                       const SizedBox(width: 15),
                       _buildSocialIcon(Icons.chat, () => _launchUrl('https://wa.me/$phoneNumber')),
-                      const SizedBox(width: 15),
-                      _buildSocialIcon(Icons.link, () => _launchUrl('https://linkedin.com/company/staymate')),
-                    ],
+                                     ],
                   ),
 
                 ],

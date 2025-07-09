@@ -22,6 +22,9 @@ class _ModifyRoomsPageState extends State<ModifyRoomsPage> {
   StreamSubscription<DatabaseEvent>? _roomSub;
   StreamSubscription<DatabaseEvent>? _bedSub;
 
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+
   @override
   void initState() {
     super.initState();
@@ -58,6 +61,7 @@ class _ModifyRoomsPageState extends State<ModifyRoomsPage> {
   void dispose() {
     _roomSub?.cancel();
     _bedSub?.cancel();
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -69,120 +73,141 @@ class _ModifyRoomsPageState extends State<ModifyRoomsPage> {
 
     if (updated == true && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Room updated.')),
+        const SnackBar(content: Text('Room updated.')),
       );
     }
   }
 
-  Future<void> _editBed(BedRetrievalModel bed) async {
-    final updated = await showDialog<bool>(
+  void _deleteRoom(String key) async {
+    final confirm = await showDialog<bool>(
       context: context,
-      builder: (_) => _EditBedDialog(bed: bed, bedRef: _bedRef),
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Room?'),
+        content: const Text('Are you sure you want to delete this room? This will delete all related beds.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
     );
 
-    if (updated == true && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Bed updated')));
+    if (confirm == true) {
+      await _roomRef.child(key).remove();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Room deleted')));
     }
   }
 
-  void _deleteRoom(String key) async {
-    await _roomRef.child(key).remove();
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Room deleted')));
-  }
-
-  void _deleteBed(String id) async {
-    await _bedRef.child(id).remove();
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Bed deleted')));
+  List<RoomRetrievalModel> _filteredRooms() {
+    if (_searchQuery.isEmpty) return _rooms;
+    return _rooms
+        .where((room) => room.roomNumber.toLowerCase().contains(_searchQuery))
+        .toList();
   }
 
   @override
   Widget build(BuildContext context) {
+    final textScale = MediaQuery.of(context).textScaleFactor;
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.white,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black), // back button color
+        elevation: 1,
+        iconTheme: const IconThemeData(color: Colors.black),
         title: const Text(
           "Modify Rooms",
           style: TextStyle(
             color: Colors.black,
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.bold,
             fontSize: 20,
             letterSpacing: 0.5,
           ),
         ),
       ),
-
-      body: _rooms.isEmpty
-          ? const Center(child: Text('No rooms found'))
-          : ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: _rooms.length,
-        itemBuilder: (_, index) {
-          final room = _rooms[index];
-          final roomBeds = _beds.where((b) => b.roomNumber == room.roomNumber).toList();
-
-          return Card(
-            margin: const EdgeInsets.only(bottom: 16),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            elevation: 4,
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text("Room No: ${room.roomNumber}",
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 6),
-                  Text("Size: ${room.roomSize}"),
-                  Text("Sharing: ${room.roomSharing}"),
-                  const SizedBox(height: 12),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      ElevatedButton.icon(
-                        icon: const Icon(Icons.edit),
-                        label: const Text('Edit'),
-                        style: ElevatedButton.styleFrom(backgroundColor: Colors.lightGreen),
-                        onPressed: () => _editRoom(room),
-                      ),
-                      const SizedBox(width: 8),
-                      ElevatedButton.icon(
-                        icon: const Icon(Icons.delete),
-                        label: const Text('Delete'),
-                        style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
-                        onPressed: () => _deleteRoom(room.key),
-                      ),
-                    ],
-                  ),
-                  if (roomBeds.isNotEmpty) ...[
-                    const Divider(height: 30),
-                    const Text("Beds", style: TextStyle(fontWeight: FontWeight.bold)),
-                    ...roomBeds.map((bed) => ListTile(
-                      title: Text("Bed ID: ${bed.id}"),
-                      subtitle: Text("Status: ${bed.status}"),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.edit, color: Colors.blue),
-                            onPressed: () => _editBed(bed),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.delete, color: Colors.red),
-                            onPressed: () => _deleteBed(bed.id),
-                          ),
-                        ],
-                      ),
-                    )),
-                  ]
-                ],
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                labelText: 'Search Room Number',
+                prefixIcon: const Icon(Icons.search),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
               ),
+              onChanged: (value) {
+                setState(() {
+                  _searchQuery = value.toLowerCase();
+                });
+              },
             ),
-          );
-        },
+          ),
+          Expanded(
+            child: _rooms.isEmpty
+                ? const Center(child: Text('No rooms found'))
+                : ListView.builder(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              itemCount: _filteredRooms().length,
+              itemBuilder: (_, index) {
+                final room = _filteredRooms()[index];
+                final roomBeds = _beds.where((b) => b.roomNumber == room.roomNumber).toList();
+
+                return Card(
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  margin: const EdgeInsets.only(bottom: 16),
+                  elevation: 4,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Room No: ${room.roomNumber}",
+                          style: TextStyle(fontSize: 18 * textScale, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 6),
+                        Text("Size: ${room.roomSize}", style: TextStyle(fontSize: 14 * textScale)),
+                        Text("Sharing: ${room.roomSharing}", style: TextStyle(fontSize: 14 * textScale)),
+                        const SizedBox(height: 12),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            ElevatedButton.icon(
+                              icon: const Icon(Icons.edit, size: 18),
+                              label: const Text('Edit'),
+                              style: ElevatedButton.styleFrom(backgroundColor: Colors.lightBlue),
+                              onPressed: () => _editRoom(room),
+                            ),
+                            const SizedBox(width: 8),
+                            ElevatedButton.icon(
+                              icon: const Icon(Icons.delete, size: 18),
+                              label: const Text('Delete'),
+                              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                              onPressed: () => _deleteRoom(room.key),
+                            ),
+                          ],
+                        ),
+                        if (roomBeds.isNotEmpty) ...[
+                          const Divider(height: 30),
+                          const Text("Beds", style: TextStyle(fontWeight: FontWeight.bold)),
+                          ...roomBeds.map((bed) => ListTile(
+                            title: Text("Bed ID: ${bed.id}"),
+                            subtitle: Text("Status: ${bed.status}"),
+                            trailing: Icon(Icons.bed_outlined, color: Colors.grey),
+                          )),
+                        ]
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -216,23 +241,19 @@ class _EditRoomDialogState extends State<_EditRoomDialog> {
     _sharingCtrl.dispose();
     super.dispose();
   }
+
   Future<void> _save() async {
-    setState(() {
-      _isSaving = true;
-    });
+    setState(() => _isSaving = true);
 
     try {
       final roomNumber = widget.room.roomNumber;
-      final oldSharing = int.tryParse(widget.room.roomSharing) ?? 0;
       final newSharing = int.tryParse(_sharingCtrl.text.trim()) ?? 0;
 
-      // Step 1: Update tblRooms
       await widget.roomRef.child(widget.room.key).update({
         'RoomSize': _sizeCtrl.text.trim(),
         'RoomSharing': _sharingCtrl.text.trim(),
       });
 
-      // Step 2: Update tblBeds
       final bedRef = FirebaseDatabase.instance.ref('PG_helper/tblBeds');
       final bedSnapshot = await bedRef.get();
 
@@ -246,9 +267,7 @@ class _EditRoomDialogState extends State<_EditRoomDialog> {
           for (final bedEntry in roomBeds.entries) {
             final bedData = Map<String, dynamic>.from(bedEntry.value);
             if (bedData['roomNumber'] == roomNumber) {
-              final currentBedCount = roomBeds.entries
-                  .where((e) => e.key.startsWith('bed'))
-                  .length;
+              final currentBedCount = roomBeds.entries.where((e) => e.key.startsWith('bed')).length;
 
               if (newSharing > currentBedCount) {
                 for (int i = currentBedCount + 1; i <= newSharing; i++) {
@@ -272,7 +291,6 @@ class _EditRoomDialogState extends State<_EditRoomDialog> {
         }
       }
 
-      // Step 3: Update tblUser sharing if user already allocated to the room
       final userRef = FirebaseDatabase.instance.ref('PG_helper/tblUser');
       final userSnapshot = await userRef.get();
 
@@ -292,15 +310,10 @@ class _EditRoomDialogState extends State<_EditRoomDialog> {
       if (!mounted) return;
       Navigator.pop(context, true);
     } catch (e) {
-      setState(() {
-        _isSaving = false;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: ${e.toString()}')),
-      );
+      setState(() => _isSaving = false);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -310,79 +323,9 @@ class _EditRoomDialogState extends State<_EditRoomDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TextField(
-              controller: _sizeCtrl,
-              decoration: const InputDecoration(labelText: 'Room Size'),
-            ),
-            TextField(
-              controller: _sharingCtrl,
-              decoration: const InputDecoration(labelText: 'Room Sharing'),
-            ),
+            TextField(controller: _sizeCtrl, decoration: const InputDecoration(labelText: 'Room Size')),
+            TextField(controller: _sharingCtrl, decoration: const InputDecoration(labelText: 'Room Sharing')),
           ],
-        ),
-      ),
-      actions: [
-        TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-        ElevatedButton(
-          onPressed: _isSaving ? null : _save,
-          child: _isSaving ? const CircularProgressIndicator() : const Text('Save'),
-        ),
-      ],
-    );
-  }
-}
-
-class _EditBedDialog extends StatefulWidget {
-  final BedRetrievalModel bed;
-  final DatabaseReference bedRef;
-
-  const _EditBedDialog({required this.bed, required this.bedRef});
-
-  @override
-  State<_EditBedDialog> createState() => _EditBedDialogState();
-}
-
-class _EditBedDialogState extends State<_EditBedDialog> {
-  late final TextEditingController _statusCtrl;
-  bool _isSaving = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _statusCtrl = TextEditingController(text: widget.bed.status);
-  }
-
-  @override
-  void dispose() {
-    _statusCtrl.dispose();
-    super.dispose();
-  }
-
-  Future<void> _save() async {
-    setState(() {
-      _isSaving = true;
-    });
-    try {
-      await widget.bedRef.child(widget.bed.id).update({
-        'status': _statusCtrl.text.trim(),
-      });
-      if (!mounted) return;
-      Navigator.pop(context, true);
-    } catch (e) {
-      setState(() {
-        _isSaving = false;
-      });
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text('Edit Bed ${widget.bed.id}'),
-      content: SingleChildScrollView(
-        child: TextField(
-          controller: _statusCtrl,
-          decoration: const InputDecoration(labelText: 'Status'),
         ),
       ),
       actions: [
