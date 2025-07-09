@@ -23,7 +23,7 @@ class _RoomDetailPageState extends State<RoomDetailPage> {
   String roomNumber = '';
   String roomSize = '';
   Map<String, String> bedStatuses = {};
-  Color roomColor = Colors.green.shade300;
+  Color roomColor = Colors.blueAccent;
 
   @override
   void initState() {
@@ -71,8 +71,8 @@ class _RoomDetailPageState extends State<RoomDetailPage> {
     }
 
     roomColor = (notAvailableCount == sharingCount && sharingCount > 0)
-        ? Colors.red.shade300
-        : Colors.green.shade300;
+        ? Colors.blueAccent
+        : Colors.white;
 
     setState(() {
       isLoading = false;
