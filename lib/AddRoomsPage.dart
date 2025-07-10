@@ -64,12 +64,7 @@ class _AddRoomPageState extends State<AddRoomPage> {
     final roomExists = existingRoom.key.isNotEmpty;
 
     if (roomExists) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Room number already used"),
-          backgroundColor: Color(0xD72A8AEA), // Blue color
-        ),
-      );
+      _showSnackBar("Room number already used");
       return;
     }
 
@@ -84,18 +79,23 @@ class _AddRoomPageState extends State<AddRoomPage> {
       });
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text("Room added successfully"),
-        backgroundColor: Color(0xD72A8AEA), // Blue color
-      ),
-    );
+    _showSnackBar("Room added successfully");
 
     _roomController.clear();
     _sizeController.clear();
     setState(() {
       _selectedSharing = null;
     });
+  }
+
+  void _showSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Color(0xD72A8AEA),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
 
   void _navigateToRoomDetails(String roomId) {
@@ -107,163 +107,132 @@ class _AddRoomPageState extends State<AddRoomPage> {
 
   @override
   Widget build(BuildContext context) {
+    final Color accentColor = Color(0xD72A8AEA);
+
     return Scaffold(
-      backgroundColor: Colors.white, // White background
+      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black), // back button color
-        title: const Text(
-          "Add Room",
-          style: TextStyle(
-            color: Colors.black,
-            fontWeight: FontWeight.w700,
-            fontSize: 20,
-            letterSpacing: 0.5,
+        elevation: 1,
+        iconTheme: IconThemeData(color: Colors.black),
+        title: Text("Add Room", style: TextStyle(color: Colors.black)),
+      ),
+      body: ListView(
+        padding: EdgeInsets.all(16),
+        children: [
+          // Add Room Form - without Card
+          Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+
+                SizedBox(height: 16),
+
+                _buildTextField("Room Number", _roomController, accentColor, TextInputType.number),
+                SizedBox(height: 16),
+
+                _buildTextField("Size of Room (e.g. 12x10 ft)", _sizeController, accentColor, TextInputType.text),
+                SizedBox(height: 16),
+
+                DropdownButtonFormField<String>(
+                  value: _selectedSharing,
+                  items: ['2', '3', '4', '5']
+                      .map((val) => DropdownMenuItem(value: val, child: Text("$val Sharing")))
+                      .toList(),
+                  onChanged: (val) => setState(() => _selectedSharing = val),
+                  decoration: _inputDecoration("Sharing", accentColor),
+                  validator: (val) => val == null ? "Select sharing" : null,
+                ),
+
+                SizedBox(height: 30),
+
+                // Custom Add Room Button
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: _submit,
+                    icon: Icon(Icons.add, color: Colors.white),
+                    label: Text("Add Room", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                    style: ElevatedButton.styleFrom(
+                      elevation: 4,
+                      backgroundColor: accentColor,
+                      padding: EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      textStyle: TextStyle(fontSize: 16),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
+
+
+          SizedBox(height: 32),
+          Text("All Rooms", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          SizedBox(height: 16),
+
+          _rooms.isEmpty
+              ? Center(child: Text("No rooms added yet.", style: TextStyle(color: Colors.white)))
+              : GridView.builder(
+            shrinkWrap: true,
+            physics: NeverScrollableScrollPhysics(),
+            itemCount: _rooms.length,
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              mainAxisSpacing: 12,
+              crossAxisSpacing: 12,
+              childAspectRatio: 3 / 2,
+            ),
+            itemBuilder: (context, index) {
+              final room = _rooms[index];
+              return GestureDetector(
+                onTap: () => _navigateToRoomDetails(room.key),
+                child: Card(
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  elevation: 2,
+                  child: Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.king_bed, size: 32, color: accentColor),
+                        SizedBox(height: 8),
+                        Text("Room No: ${room.roomNumber}",
+                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                        SizedBox(height: 4),
+                        Text("${room.roomSharing}-Sharing",
+                            style: TextStyle(color: Colors.grey[600], fontSize: 13)),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
       ),
 
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            Form(
-              key: _formKey,
-              child: Column(
-                children: [
-                  TextFormField(
-                    controller: _roomController,
-                    keyboardType: TextInputType.number,
-                    decoration: InputDecoration(
-                      labelText: "Room Number",
-                      labelStyle: TextStyle(color: Color(0xD72A8AEA)),
-                      border: OutlineInputBorder(
-                        borderSide: BorderSide(color: Color(0xD72A8AEA)),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Color(0xD72A8AEA)),
-                      ),
-                      filled: true,
-                      fillColor: Colors.white,
-                    ),
-                    validator: (value) => value == null || value.isEmpty ? "Enter room number" : null,
-                  ),
-                  SizedBox(height: 16),
-                  TextFormField(
-                    controller: _sizeController,
-                    decoration: InputDecoration(
-                      labelText: "Size of Room (e.g. 12x10 ft)",
-                      labelStyle: TextStyle(color: Color(0xD72A8AEA)),
-                      border: OutlineInputBorder(
-                        borderSide: BorderSide(color: Color(0xD72A8AEA)),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Color(0xD72A8AEA)),
-                      ),
-                      filled: true,
-                      fillColor: Colors.white,
-                    ),
-                    validator: (value) => value == null || value.isEmpty ? "Enter room size" : null,
-                  ),
-                  SizedBox(height: 16),
-                  DropdownButtonFormField<String>(
-                    value: _selectedSharing,
-                    items: ['2', '3', '4', '5']
-                        .map((val) => DropdownMenuItem(
-                      value: val,
-                      child: Text("$val Sharing", style: TextStyle(color: Colors.black)),
-                    ))
-                        .toList(),
-                    onChanged: (val) {
-                      setState(() {
-                        _selectedSharing = val;
-                      });
-                    },
-                    decoration: InputDecoration(
-                      labelText: "Sharing",
-                      labelStyle: TextStyle(color: Color(0xD72A8AEA)),
-                      border: OutlineInputBorder(
-                        borderSide: BorderSide(color: Color(0xD72A8AEA)),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Color(0xD72A8AEA)),
-                      ),
-                      filled: true,
-                      fillColor: Colors.white,
-                    ),
-                    dropdownColor: Colors.white,
-                    style: TextStyle(color: Colors.black),
-                    validator: (val) => val == null ? "Select sharing" : null,
-                  ),
-                  SizedBox(height: 24),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: _submit,
-                      child: Text("Add Room", style: TextStyle(color: Colors.white)),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Color(0xD72A8AEA), // Blue button
-                        padding: EdgeInsets.symmetric(vertical: 14),
-                        textStyle: TextStyle(fontSize: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(height: 32),
-            _rooms.isEmpty
-                ? Center(child: Text("No rooms added yet.", style: TextStyle(color: Colors.grey)))
-                : GridView.builder(
-              shrinkWrap: true,
-              padding: EdgeInsets.only(bottom: 16),
-              physics: NeverScrollableScrollPhysics(),
-              itemCount: _rooms.length,
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                mainAxisSpacing: 12,
-                crossAxisSpacing: 12,
-                childAspectRatio: 3 / 2,
-              ),
-              itemBuilder: (context, index) {
-                final room = _rooms[index];
-                return GestureDetector(
-                  onTap: () => _navigateToRoomDetails(room.key),
-                  child: Card(
-                    color: Colors.white, // White card background
-                    elevation: 4,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      side: BorderSide(color: Color(0xD72A8AEA).withOpacity(0.3)),
-                    ),
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.bed, size: 36, color: Color(0xD72A8AEA)), // Blue icon
-                          SizedBox(height: 8),
-                          Text(
-                            "Room No: ${room.roomNumber}",
-                            style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                                color: Color(0xD72A8AEA)), // Blue text
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ],
-        ),
-      ),
+    );
+  }
+
+  Widget _buildTextField(String label, TextEditingController controller, Color accent, TextInputType type) {
+    return TextFormField(
+      controller: controller,
+      keyboardType: type,
+      decoration: _inputDecoration(label, accent),
+      validator: (value) => value == null || value.isEmpty ? "Enter $label" : null,
+    );
+  }
+
+  InputDecoration _inputDecoration(String label, Color accent) {
+    return InputDecoration(
+      labelText: label,
+      labelStyle: TextStyle(color: accent),
+      filled: true,
+      fillColor: Colors.white,
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.0)),
+      focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: accent)),
     );
   }
 }

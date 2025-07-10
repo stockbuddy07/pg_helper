@@ -1,3 +1,4 @@
+// Your existing imports
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'dart:async';
@@ -79,11 +80,53 @@ class _ModifyRoomsPageState extends State<ModifyRoomsPage> {
   }
 
   void _deleteRoom(String key) async {
+    final roomSnapshot = await _roomRef.child(key).get();
+    if (!roomSnapshot.exists) return;
+
+    final roomData = Map<String, dynamic>.from(roomSnapshot.value as Map);
+    final roomNumber = roomData['RoomNumber'];
+
+    final userRef = FirebaseDatabase.instance.ref('PG_helper/tblUser');
+    final userSnapshot = await userRef.get();
+
+    List<String> usersInRoom = [];
+
+    if (userSnapshot.exists) {
+      final userMap = Map<String, dynamic>.from(userSnapshot.value as Map);
+      for (final entry in userMap.entries) {
+        final userData = Map<String, dynamic>.from(entry.value);
+        if (userData['RoomNumber'] == roomNumber) {
+          final name = '${userData['FirstName'] ?? ''} ${userData['LastName'] ?? ''}';
+          final contact = userData['ContactNumber'] ?? '';
+          final username = userData['Username'] ?? '';
+          usersInRoom.add("👤 $name\n📱 $contact\n🔑 $username");
+        }
+      }
+    }
+
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Room?'),
-        content: const Text('Are you sure you want to delete this room? This will delete all related beds.'),
+        content: usersInRoom.isEmpty
+            ? const Text('No users are assigned to this room. Proceed with deletion?')
+            : Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Following users are assigned to this room:',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 10),
+            ...usersInRoom.map((info) => Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text(info),
+            )),
+            const Divider(),
+            const Text('Are you sure you want to delete this room?'),
+          ],
+        ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
           ElevatedButton(
@@ -96,9 +139,52 @@ class _ModifyRoomsPageState extends State<ModifyRoomsPage> {
     );
 
     if (confirm == true) {
-      await _roomRef.child(key).remove();
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Room deleted')));
+      try {
+        // Step 1: Unassign users from this room
+        if (userSnapshot.exists) {
+          final userMap = Map<String, dynamic>.from(userSnapshot.value as Map);
+          for (final entry in userMap.entries) {
+            final userKey = entry.key;
+            final userData = Map<String, dynamic>.from(entry.value);
+            if (userData['RoomNumber'] == roomNumber) {
+              await userRef.child(userKey).update({
+                'BedStatus': 'unallocated',
+              });
+              await userRef.child(userKey).child('RoomNumber').remove();
+              await userRef.child(userKey).child('Sharing').remove();
+              await userRef.child(userKey).child('BedNumber').remove();
+            }
+          }
+        }
+
+        // Step 2: Delete the room from tblRooms
+        await _roomRef.child(key).remove();
+
+        // Step 3: Delete beds from tblBeds that belong to this room
+        final bedsSnapshot = await _bedRef.get();
+        if (bedsSnapshot.exists) {
+          final bedsMap = Map<String, dynamic>.from(bedsSnapshot.value as Map);
+          for (final bedGroupEntry in bedsMap.entries) {
+            final groupKey = bedGroupEntry.key;
+            final groupData = Map<String, dynamic>.from(bedGroupEntry.value);
+
+            // Check if any bed in the group has roomNumber == deleted room
+            final hasRoom = groupData.values.any((bed) =>
+            bed is Map &&
+                bed.containsKey('roomNumber') &&
+                bed['roomNumber'].toString() == roomNumber.toString());
+
+            if (hasRoom) {
+              await _bedRef.child(groupKey).remove();
+            }
+          }
+        }
+
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Room deleted')));
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
+      }
     }
   }
 
@@ -197,7 +283,7 @@ class _ModifyRoomsPageState extends State<ModifyRoomsPage> {
                           ...roomBeds.map((bed) => ListTile(
                             title: Text("Bed ID: ${bed.id}"),
                             subtitle: Text("Status: ${bed.status}"),
-                            trailing: Icon(Icons.bed_outlined, color: Colors.grey),
+                            trailing: const Icon(Icons.bed_outlined, color: Colors.grey),
                           )),
                         ]
                       ],
@@ -242,97 +328,39 @@ class _EditRoomDialogState extends State<_EditRoomDialog> {
     super.dispose();
   }
 
-  Future<void> _save() async {
-    setState(() => _isSaving = true);
-
-    try {
-      final roomNumber = widget.room.roomNumber;
-      final newSharing = int.tryParse(_sharingCtrl.text.trim()) ?? 0;
-
-      await widget.roomRef.child(widget.room.key).update({
-        'RoomSize': _sizeCtrl.text.trim(),
-        'RoomSharing': _sharingCtrl.text.trim(),
-      });
-
-      final bedRef = FirebaseDatabase.instance.ref('PG_helper/tblBeds');
-      final bedSnapshot = await bedRef.get();
-
-      if (bedSnapshot.exists) {
-        final bedsMap = Map<String, dynamic>.from(bedSnapshot.value as Map);
-
-        for (final entry in bedsMap.entries) {
-          final roomId = entry.key;
-          final roomBeds = Map<String, dynamic>.from(entry.value);
-
-          for (final bedEntry in roomBeds.entries) {
-            final bedData = Map<String, dynamic>.from(bedEntry.value);
-            if (bedData['roomNumber'] == roomNumber) {
-              final currentBedCount = roomBeds.entries.where((e) => e.key.startsWith('bed')).length;
-
-              if (newSharing > currentBedCount) {
-                for (int i = currentBedCount + 1; i <= newSharing; i++) {
-                  final newBed = {
-                    'roomNumber': roomNumber,
-                    'status': 'available',
-                  };
-                  await bedRef.child('$roomId/bed$i').set(newBed);
-                }
-              }
-
-              if (newSharing < currentBedCount) {
-                for (int i = currentBedCount; i > newSharing; i--) {
-                  await bedRef.child('$roomId/bed$i').remove();
-                }
-              }
-
-              break;
-            }
-          }
-        }
-      }
-
-      final userRef = FirebaseDatabase.instance.ref('PG_helper/tblUser');
-      final userSnapshot = await userRef.get();
-
-      if (userSnapshot.exists) {
-        final userMap = Map<String, dynamic>.from(userSnapshot.value as Map);
-
-        for (final entry in userMap.entries) {
-          final userKey = entry.key;
-          final userData = Map<String, dynamic>.from(entry.value);
-
-          if (userData['RoomNumber'] == roomNumber) {
-            await userRef.child(userKey).update({'Sharing': _sharingCtrl.text.trim()});
-          }
-        }
-      }
-
-      if (!mounted) return;
-      Navigator.pop(context, true);
-    } catch (e) {
-      setState(() => _isSaving = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text('Edit Room ${widget.room.roomNumber}'),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(controller: _sizeCtrl, decoration: const InputDecoration(labelText: 'Room Size')),
-            TextField(controller: _sharingCtrl, decoration: const InputDecoration(labelText: 'Room Sharing')),
-          ],
-        ),
+      title: const Text("Edit Room"),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: _sizeCtrl,
+            decoration: const InputDecoration(labelText: "Room Size"),
+          ),
+          TextField(
+            controller: _sharingCtrl,
+            decoration: const InputDecoration(labelText: "Sharing"),
+            keyboardType: TextInputType.number,
+          ),
+        ],
       ),
       actions: [
         TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
         ElevatedButton(
-          onPressed: _isSaving ? null : _save,
-          child: _isSaving ? const CircularProgressIndicator() : const Text('Save'),
+          onPressed: _isSaving
+              ? null
+              : () async {
+            setState(() => _isSaving = true);
+            await widget.roomRef.child(widget.room.key).update({
+              'RoomSize': _sizeCtrl.text.trim(),
+              'RoomSharing': _sharingCtrl.text.trim(),
+            });
+            setState(() => _isSaving = false);
+            if (mounted) Navigator.pop(context, true);
+          },
+          child: const Text('Save'),
         ),
       ],
     );

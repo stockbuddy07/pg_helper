@@ -74,15 +74,19 @@ class _RoomManagementDashboardState extends State<RoomManagementDashboard> {
             _buildCard(context, "Add Room", Icons.add_business, Colors.blueAccent, () {
               _navigate(context, AddRoomPage());
             }),
-            _buildCard(context, "Show Rooms", Icons.meeting_room, Colors.blueAccent, () {
-              _navigate(context, ShowRoomsPage());
-            }),
+            // _buildCard(context, "Show Rooms", Icons.meeting_room, Colors.blueAccent, () {
+            //   _navigate(context, ShowRoomsPage());
+            // }),
             _buildCard(context, "Modify Rooms", Icons.edit, Colors.blueAccent, () {
-              _navigate(context, const ModifyRoomsPage());
+              _navigate(context, ModifyRoomsPage());
             }),
           ],
         ),
       ),
     );
   }
+}
+
+class ModifyRooms {
+  const ModifyRooms();
 }

@@ -98,83 +98,21 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     }
   }
 
-  Widget _buildAnimatedCard(int index) {
-    final item = _features[index];
-    return ScaleTransition(
-      scale: _animation,
-      child: Card(
-        elevation: 4,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(16),
-          onTap: () {
-            if (item.label == "Room Info") {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => RoomInfoPage(firstname: widget.firstname)),
-              );
-            } else if (item.label == "Roommates Info") {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => RoommatesInfoPage(firstname: widget.firstname)),
-              );
-            }
-          },
-          child: Container(
-            height: 160,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  item.color.withOpacity(0.8),
-                  item.color.withOpacity(0.5),
-                ],
-              ),
-            ),
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(item.icon, size: 28, color: Colors.white),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  item.label,
-                  style: const TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildMealCard(String title, String value, IconData icon) {
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Container(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: Colors.white,
+          gradient: LinearGradient(
+            colors: [Colors.blue.shade50, Colors.white],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
           borderRadius: BorderRadius.circular(12),
         ),
-        child: Column(
+        child: Row(
           children: [
             Container(
               width: 40,
@@ -185,16 +123,160 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
               ),
               child: Icon(icon, size: 20, color: Colors.blueAccent),
             ),
-            const SizedBox(height: 8),
-            Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-            const SizedBox(height: 4),
-            Text(
-              value.isNotEmpty ? value : "Not Available",
-              style: TextStyle(fontSize: 13, color: Colors.grey[700]),
-              textAlign: TextAlign.center,
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                  const SizedBox(height: 4),
+                  Text(
+                    value.isNotEmpty ? value : "Not Available",
+                    style: TextStyle(fontSize: 13, color: Colors.grey[700]),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildQuickAccessSection() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          int crossAxisCount = constraints.maxWidth > 600 ? 3 : 2;
+
+          return GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: _features.length,
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: crossAxisCount,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+              childAspectRatio: 1,
+            ),
+            itemBuilder: (context, index) {
+              final item = _features[index];
+              return ScaleTransition(
+                scale: _animation,
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        item.color.withOpacity(0.8),
+                        item.color.withOpacity(0.5),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: item.color.withOpacity(0.3),
+                        blurRadius: 6,
+                        offset: const Offset(2, 4),
+                      ),
+                    ],
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(12),
+                      onTap: () {
+                        if (item.label == "Room Info") {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (_) => RoomInfoPage(firstname: widget.firstname)),
+                          );
+                        } else if (item.label == "Roommates Info") {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (_) => RoommatesInfoPage(firstname: widget.firstname)),
+                          );
+                        }
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(item.icon, size: 36, color: Colors.white),
+                            const SizedBox(height: 12),
+                            Text(
+                              item.label,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
+          );
+
+        },
+      ),
+    );
+  }
+
+  Widget _buildMealsSection(BuildContext context) {
+    List<Widget> mealCards = [];
+
+    if (breakfast.isNotEmpty) {
+      mealCards.add(_buildMealCard("Breakfast", breakfast, Icons.breakfast_dining));
+    }
+    if (lunch.isNotEmpty) {
+      mealCards.add(_buildMealCard("Lunch", lunch, Icons.lunch_dining));
+    }
+    if (dinner.isNotEmpty) {
+      mealCards.add(_buildMealCard("Dinner", dinner, Icons.dinner_dining));
+    }
+    if (snacks.isNotEmpty) {
+      mealCards.add(_buildMealCard("Snacks", snacks, Icons.fastfood));
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        children: mealCards
+            .map((card) => Padding(
+          padding: const EdgeInsets.symmetric(vertical: 6),
+          child: card,
+        ))
+            .toList(),
+      ),
+    );
+  }
+
+  Widget _buildSectionHeader(IconData icon, String title) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        children: [
+          Icon(icon, color: Colors.blueAccent),
+          const SizedBox(width: 8),
+          Text(
+            title,
+            style: Theme.of(context)
+                .textTheme
+                .titleMedium
+                ?.copyWith(fontWeight: FontWeight.bold),
+          ),
+        ],
       ),
     );
   }
@@ -213,12 +295,44 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     );
   }
 
+  Widget _buildRulesSection() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Card(
+        elevation: 2,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.blue.shade50, Colors.white],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildRuleItem("1. Maintain cleanliness in rooms and common areas."),
+              _buildRuleItem("2. No loud music or parties after 10 PM."),
+              _buildRuleItem("3. Outside guests are not allowed without permission."),
+              _buildRuleItem("4. Meal timings must be followed strictly."),
+              _buildRuleItem("5. Damages to property will be charged."),
+              _buildRuleItem("6. Maintain discipline and decorum."),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
         key: _scaffoldKey,
-        backgroundColor: const Color(0xFFF8FAFD),
+        backgroundColor: const Color(0xFFFFFFFF),
         appBar: AppBar(
           backgroundColor: Colors.white,
           elevation: 0,
@@ -275,123 +389,6 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
               ),
             );
           },
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSectionHeader(IconData icon, String title) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(
-        children: [
-          Icon(icon, color: Colors.blueAccent),
-          const SizedBox(width: 8),
-          Text(title, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
-        ],
-      ),
-    );
-  }
-  Widget _buildMealsSection(BuildContext context) {
-    List<Widget> mealCards = [];
-
-    if (breakfast.isNotEmpty) {
-      mealCards.add(_buildMealCard("Breakfast", breakfast, Icons.breakfast_dining));
-    }
-    if (lunch.isNotEmpty) {
-      mealCards.add(_buildMealCard("Lunch", lunch, Icons.lunch_dining));
-    }
-    if (dinner.isNotEmpty) {
-      mealCards.add(_buildMealCard("Dinner", dinner, Icons.dinner_dining));
-    }
-    if (snacks.isNotEmpty) {
-      mealCards.add(_buildMealCard("Snacks", snacks, Icons.fastfood));
-    }
-
-    if (mealCards.length == 4) {
-      // Show in 2x2 layout if all meals are available
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Wrap(
-          spacing: 12,
-          runSpacing: 12,
-          children: [
-            SizedBox(
-              width: (MediaQuery.of(context).size.width - 52) / 2,
-              child: mealCards[0],
-            ),
-            SizedBox(
-              width: (MediaQuery.of(context).size.width - 52) / 2,
-              child: mealCards[1],
-            ),
-            SizedBox(
-              width: (MediaQuery.of(context).size.width - 52) / 2,
-              child: mealCards[2],
-            ),
-            SizedBox(
-              width: (MediaQuery.of(context).size.width - 52) / 2,
-              child: mealCards[3],
-            ),
-          ],
-        ),
-      );
-    } else {
-      // Show in single row if any meal is missing
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: mealCards.map((card) {
-            return Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4),
-                child: card,
-              ),
-            );
-          }).toList(),
-        ),
-      );
-    }
-  }
-
-
-  Widget _buildQuickAccessSection() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: GridView.builder(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        itemCount: _features.length,
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          crossAxisSpacing: 16,
-          mainAxisSpacing: 16,
-          childAspectRatio: 0.9,
-        ),
-        itemBuilder: (context, index) => _buildAnimatedCard(index),
-      ),
-    );
-  }
-
-  Widget _buildRulesSection() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Card(
-        elevation: 2,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildRuleItem("1. Maintain cleanliness in rooms and common areas."),
-              _buildRuleItem("2. No loud music or parties after 10 PM."),
-              _buildRuleItem("3. Outside guests are not allowed without permission."),
-              _buildRuleItem("4. Meal timings must be followed strictly."),
-              _buildRuleItem("5. Damages to property will be charged."),
-              _buildRuleItem("6. Maintain discipline and decorum."),
-            ],
-          ),
         ),
       ),
     );
