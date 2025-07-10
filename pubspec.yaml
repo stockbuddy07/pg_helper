@@ -31,7 +31,6 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-#  cupertino_icons: ^1.0.2
   firebase_database: ^10.5.7
   firebase_storage: ^11.7.7
   firebase_core: ^2.24.2
@@ -62,6 +61,7 @@ dependencies:
   qr_flutter: any
   flutter_countdown_timer: ^4.1.0 # Add this line
   flutter_native_splash: ^2.3.10
+  flutter_staggered_grid_view: ^0.7.0
 
 flutter_launcher_icons:
   flutter_launcher_icons: ^0.13.1 # or latest
@@ -77,6 +77,7 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
 
+#splash screen
 flutter_native_splash:
   color: "#ffffff"                # Background color
   image: assets/staymate.png         # Path to your splash image
