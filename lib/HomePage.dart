@@ -8,7 +8,7 @@ import 'firebase_api.dart';
 import 'models/MealsModel.dart';
 import 'RoomInfoPage.dart';
 import 'RoommatesInfoPage.dart';
-
+import 'dart:ui';
 class HomePage extends StatefulWidget {
   final String firstname;
 
@@ -158,80 +158,88 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
               crossAxisCount: crossAxisCount,
               crossAxisSpacing: 12,
               mainAxisSpacing: 12,
-              childAspectRatio: 1,
+              childAspectRatio: 1.1, // Increased ratio = reduced height
             ),
             itemBuilder: (context, index) {
               final item = _features[index];
               return ScaleTransition(
                 scale: _animation,
-                child: Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        item.color.withOpacity(0.8),
-                        item.color.withOpacity(0.5),
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: item.color.withOpacity(0.3),
-                        blurRadius: 6,
-                        offset: const Offset(2, 4),
-                      ),
-                    ],
-                  ),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(12),
-                      onTap: () {
-                        if (item.label == "Room Info") {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (_) => RoomInfoPage(firstname: widget.firstname)),
-                          );
-                        } else if (item.label == "Roommates Info") {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (_) => RoommatesInfoPage(firstname: widget.firstname)),
-                          );
-                        }
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(item.icon, size: 36, color: Colors.white),
-                            const SizedBox(height: 12),
-                            Text(
-                              item.label,
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.white,
-                              ),
-                            ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 8.0, sigmaY: 8.0),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            item.color.withOpacity(0.4),
+                            item.color.withOpacity(0.2),
                           ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.white.withOpacity(0.2)),
+                        boxShadow: [
+                          BoxShadow(
+                            color: item.color.withOpacity(0.3),
+                            blurRadius: 6,
+                            offset: const Offset(2, 4),
+                          ),
+                        ],
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(12),
+                          onTap: () {
+                            if (item.label == "Room Info") {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (_) => RoomInfoPage(firstname: widget.firstname)),
+                              );
+                            } else if (item.label == "Roommates Info") {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (_) => RoommatesInfoPage(firstname: widget.firstname)),
+                              );
+                            }
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(item.icon, size: 30, color: Colors.white),
+                                const SizedBox(height: 8),
+                                Text(
+                                  item.label,
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
                       ),
                     ),
                   ),
                 ),
               );
+
             },
           );
-
         },
       ),
     );
   }
+
 
   Widget _buildMealsSection(BuildContext context) {
     List<Widget> mealCards = [];
@@ -254,7 +262,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
       child: Column(
         children: mealCards
             .map((card) => Padding(
-          padding: const EdgeInsets.symmetric(vertical: 6),
+          padding: const EdgeInsets.symmetric(vertical: 0.3),
           child: card,
         ))
             .toList(),

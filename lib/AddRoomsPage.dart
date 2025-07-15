@@ -14,11 +14,15 @@ class AddRoomPage extends StatefulWidget {
 class _AddRoomPageState extends State<AddRoomPage> {
   final _roomController = TextEditingController();
   final _sizeController = TextEditingController();
+  final _searchController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   String? _selectedSharing;
 
-  final DatabaseReference _roomRef = FirebaseDatabase.instance.ref().child('PG_helper/tblRooms');
+  final DatabaseReference _roomRef =
+  FirebaseDatabase.instance.ref().child('PG_helper/tblRooms');
+
   List<RoomRetrievalModel> _rooms = [];
+  List<RoomRetrievalModel> _filteredRooms = [];
 
   @override
   void initState() {
@@ -35,15 +39,27 @@ class _AddRoomPageState extends State<AddRoomPage> {
         data.forEach((key, value) {
           loadedRooms.add(RoomRetrievalModel.fromMap(key, value));
         });
-        loadedRooms.sort((a, b) => a.key.compareTo(b.key));
+        loadedRooms.sort((a, b) => b.key.compareTo(a.key));
         setState(() {
           _rooms = loadedRooms;
+          _filteredRooms = loadedRooms;
         });
       } else {
         setState(() {
           _rooms = [];
+          _filteredRooms = [];
         });
       }
+    });
+  }
+
+  void _filterRooms(String query) {
+    final filtered = _rooms
+        .where((room) =>
+        room.roomNumber.toLowerCase().contains(query.toLowerCase()))
+        .toList();
+    setState(() {
+      _filteredRooms = filtered;
     });
   }
 
@@ -58,12 +74,11 @@ class _AddRoomPageState extends State<AddRoomPage> {
 
     final existingRoom = _rooms.firstWhere(
           (room) => room.roomNumber == formData.roomNumber,
-      orElse: () => RoomRetrievalModel(key: '', roomNumber: '', roomSize: '', roomSharing: ''),
+      orElse: () =>
+          RoomRetrievalModel(key: '', roomNumber: '', roomSize: '', roomSharing: ''),
     );
 
-    final roomExists = existingRoom.key.isNotEmpty;
-
-    if (roomExists) {
+    if (existingRoom.key.isNotEmpty) {
       _showSnackBar("Room number already used");
       return;
     }
@@ -71,7 +86,8 @@ class _AddRoomPageState extends State<AddRoomPage> {
     final newRoomKey = _roomRef.push().key;
     await _roomRef.child(newRoomKey!).set(formData.toMap());
 
-    final bedRef = FirebaseDatabase.instance.ref().child('PG_helper/tblBeds/$newRoomKey');
+    final bedRef =
+    FirebaseDatabase.instance.ref().child('PG_helper/tblBeds/$newRoomKey');
     for (int i = 1; i <= int.parse(formData.roomSharing); i++) {
       await bedRef.child('bed$i').set({
         'status': 'available',
@@ -83,6 +99,7 @@ class _AddRoomPageState extends State<AddRoomPage> {
 
     _roomController.clear();
     _sizeController.clear();
+    _searchController.clear();
     setState(() {
       _selectedSharing = null;
     });
@@ -120,21 +137,15 @@ class _AddRoomPageState extends State<AddRoomPage> {
       body: ListView(
         padding: EdgeInsets.all(16),
         children: [
-          // Add Room Form - without Card
+          // Form Section
           Form(
             key: _formKey,
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-
-                SizedBox(height: 16),
-
                 _buildTextField("Room Number", _roomController, accentColor, TextInputType.number),
                 SizedBox(height: 16),
-
                 _buildTextField("Size of Room (e.g. 12x10 ft)", _sizeController, accentColor, TextInputType.text),
                 SizedBox(height: 16),
-
                 DropdownButtonFormField<String>(
                   value: _selectedSharing,
                   items: ['2', '3', '4', '5']
@@ -144,10 +155,7 @@ class _AddRoomPageState extends State<AddRoomPage> {
                   decoration: _inputDecoration("Sharing", accentColor),
                   validator: (val) => val == null ? "Select sharing" : null,
                 ),
-
                 SizedBox(height: 30),
-
-                // Custom Add Room Button
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
@@ -166,26 +174,36 @@ class _AddRoomPageState extends State<AddRoomPage> {
               ],
             ),
           ),
-
-
           SizedBox(height: 32),
           Text("All Rooms", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          SizedBox(height: 12),
+          TextField(
+            controller: _searchController,
+            decoration: InputDecoration(
+              hintText: 'Search by Room Number',
+              prefixIcon: Icon(Icons.search),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.0)),
+              focusedBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: accentColor),
+              ),
+            ),
+            onChanged: _filterRooms,
+          ),
           SizedBox(height: 16),
-
-          _rooms.isEmpty
-              ? Center(child: Text("No rooms added yet.", style: TextStyle(color: Colors.white)))
+          _filteredRooms.isEmpty
+              ? Center(child: Text("No rooms added yet.", style: TextStyle(color: Colors.grey)))
               : GridView.builder(
             shrinkWrap: true,
             physics: NeverScrollableScrollPhysics(),
-            itemCount: _rooms.length,
+            itemCount: _filteredRooms.length,
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
               mainAxisSpacing: 12,
               crossAxisSpacing: 12,
-              childAspectRatio: 3 / 2,
+              childAspectRatio: 1 / 1,
             ),
             itemBuilder: (context, index) {
-              final room = _rooms[index];
+              final room = _filteredRooms[index];
               return GestureDetector(
                 onTap: () => _navigateToRoomDetails(room.key),
                 child: Card(
@@ -212,7 +230,6 @@ class _AddRoomPageState extends State<AddRoomPage> {
           ),
         ],
       ),
-
     );
   }
 

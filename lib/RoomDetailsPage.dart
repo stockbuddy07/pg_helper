@@ -278,14 +278,14 @@ class _RoomDetailPageState extends State<RoomDetailPage> {
   Widget build(BuildContext context) {
     if (isLoading) {
       return Scaffold(
-        appBar: AppBar(title: Text('Room Details'), backgroundColor: roomColor),
+        appBar: AppBar(),
         body: Center(child: CircularProgressIndicator()),
       );
     }
 
     if (roomData == null) {
       return Scaffold(
-        appBar: AppBar(title: Text('Room Details'), backgroundColor: roomColor),
+        appBar: AppBar(),
         body: Center(child: Text("Room not found")),
       );
     }
